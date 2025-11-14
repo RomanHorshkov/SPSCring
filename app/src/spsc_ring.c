@@ -66,7 +66,7 @@ struct spsc_ring{
  * - Support multiple ring buffers
  * - Add proper error handling for allocation failures
  */
-spsc_ring_t ring;
+static spsc_ring_t g_ring;
 
 /*
  * Ring Buffer Initialization Function
@@ -84,7 +84,7 @@ spsc_ring_t ring;
  * 
  * Returns:
  * - Pointer to the initialized ring buffer
- * - Returns address of global 'ring' variable
+ * - Returns address of global 'g_ring' instance
  * 
  * Memory Initialization:
  * - Allocates buffer memory using calloc() (zeros the memory)
@@ -114,15 +114,15 @@ spsc_ring_t *spsc_ring_init(uint32_t capacity)
          * We use: index & mask (fast bitwise AND)
          * This only works when size is a power of 2!
          */
-        ring.size = capacity;
-        ring.mask = capacity - 1;
+        g_ring.size = capacity;
+        g_ring.mask = capacity - 1;
         
         /*
          * Allocate the circular buffer array
          * calloc() initializes all elements to 0, which is helpful for debugging
          * In production, you might use malloc() for slightly better performance
          */
-        ring.buf  = calloc(capacity, sizeof(int));
+        g_ring.buf  = calloc(capacity, sizeof(int));
         
         /*
          * Initialize atomic head and tail pointers to 0
@@ -131,11 +131,11 @@ spsc_ring_t *spsc_ring_init(uint32_t capacity)
          * 
          * Initial state: head = tail = 0 (empty buffer)
          */
-        atomic_store(&ring.head, 0);
-        atomic_store(&ring.tail, 0);
+        atomic_store(&g_ring.head, 0);
+        atomic_store(&g_ring.tail, 0);
         
         /* Return pointer to the global ring instance */
-        return &ring;
+        return &g_ring;
     }
 }
 
