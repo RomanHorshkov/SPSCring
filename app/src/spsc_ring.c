@@ -54,21 +54,6 @@ struct spsc_ring{
 };
 
 /*
- * Global Ring Buffer Instance
- * ===========================
- * 
- * Note: This implementation uses a global static instance rather than
- * dynamic allocation. This simplifies memory management but limits
- * the system to a single ring buffer instance.
- * 
- * In a production system, you might want to:
- * - Dynamically allocate ring instances
- * - Support multiple ring buffers
- * - Add proper error handling for allocation failures
- */
-static spsc_ring_t g_ring;
-
-/*
  * Ring Buffer Initialization Function
  * ====================================
  * 
@@ -107,6 +92,8 @@ spsc_ring_t *spsc_ring_init(uint32_t capacity)
     }
     else
     {
+        spsc_ring_t *ring = calloc(1, sizeof(*ring));
+        if(!ring) return NULL;
         /* 
          * Store the capacity and calculate the bitmask
          * The mask allows us to efficiently wrap indices:
@@ -114,15 +101,20 @@ spsc_ring_t *spsc_ring_init(uint32_t capacity)
          * We use: index & mask (fast bitwise AND)
          * This only works when size is a power of 2!
          */
-        g_ring.size = capacity;
-        g_ring.mask = capacity - 1;
+        ring->size = capacity;
+        ring->mask = capacity - 1;
         
         /*
          * Allocate the circular buffer array
          * calloc() initializes all elements to 0, which is helpful for debugging
          * In production, you might use malloc() for slightly better performance
          */
-        g_ring.buf  = calloc(capacity, sizeof(int));
+        ring->buf  = calloc(capacity, sizeof(int));
+        if(!ring->buf)
+        {
+            free(ring);
+            return NULL;
+        }
         
         /*
          * Initialize atomic head and tail pointers to 0
@@ -131,11 +123,11 @@ spsc_ring_t *spsc_ring_init(uint32_t capacity)
          * 
          * Initial state: head = tail = 0 (empty buffer)
          */
-        atomic_store(&g_ring.head, 0);
-        atomic_store(&g_ring.tail, 0);
+        atomic_store(&ring->head, 0);
+        atomic_store(&ring->tail, 0);
         
-        /* Return pointer to the global ring instance */
-        return &g_ring;
+        /* Return pointer to the ring instance */
+        return ring;
     }
 }
 
@@ -408,13 +400,7 @@ void spsc_ring_destroy(spsc_ring_t **ring)
          * This releases the memory that holds the actual ring data
          */
         free((*ring)->buf);
-        
-        /*
-         * Set caller's pointer to NULL to prevent use-after-free
-         * This is a defensive programming technique that makes
-         * accidental reuse more likely to crash obviously rather than
-         * silently corrupt memory
-         */
+        free(*ring);
         *ring = NULL;
     }
 }
