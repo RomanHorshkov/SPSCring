@@ -1,14 +1,11 @@
-name: unit-tests
+name: integration-tests
 
 on:
   push:
     branches:
       - master
-      - rearchitecturing
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: "0 5 * * 1"
 
 permissions:
   contents: read
@@ -18,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  uts:
-    name: UTs + coverage (manual scripts)
+  its:
+    name: ITs (manual script)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,13 +26,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config libcmocka-dev gcovr jq
 
-      - name: Build and run UTs and generate coverage
+      - name: Build and run ITs
         run: |
-          ./utils/make_UTs.sh
+          ./utils/make_ITs.sh
 
-      - name: Upload coverage artifacts (HTML/XML/JSON)
+      - name: Upload integration result
         uses: actions/upload-artifact@v4
         with:
-          name: uts-coverage
+          name: integration-result
           path: |
-            tests/results/UTs
+            tests/results/ITs/integration_result.txt
