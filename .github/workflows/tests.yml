@@ -1,0 +1,59 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - master
+      - rearchitecturing
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-tests:
+    name: Release tests (UTs + ITs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libcmocka-dev
+
+      - name: Build and run release UTs
+        run: |
+          ./utils/make_UTs_release.sh
+
+      - name: Build and run ITs
+        run: |
+          ./utils/make_ITs.sh
+
+  coverage-tests:
+    name: Coverage tests (UTs)
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libcmocka-dev gcovr
+
+      - name: Build and run UTs with coverage
+        run: |
+          ./utils/make_UTs_cov.sh
+
+      - name: Upload coverage artifacts (HTML/XML/JSON)
+        uses: actions/upload-artifact@v4
+        with:
+          name: uts-coverage
+          path: |
+            tests/results/UTs
