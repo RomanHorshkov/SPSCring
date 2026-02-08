@@ -1,11 +1,13 @@
 /* Project: https://github.com/RomanHorshkov */
-#include <cmocka.h>
 #include <pthread.h>
 #include <sched.h>
 #include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <setjmp.h>
 
+#include <cmocka.h>
 #include "spscring.h"
 
 static void test_simple_flow(void** state)
