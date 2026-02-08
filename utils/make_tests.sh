@@ -43,16 +43,16 @@ gcovr -r "${ROOT_DIR}" \
     --object-directory "${BUILD_DIR}" \
     --exclude 'tests/' \
     --html --html-details \
-    -o "${RESULT_DIR}/UTs_public_coverage.html"
+    -o "${RESULT_DIR}/UTs_coverage.html"
 gcovr -r "${ROOT_DIR}" \
     --object-directory "${BUILD_DIR}" \
     --exclude 'tests/' \
     --xml \
-    -o "${RESULT_DIR}/UTs_public_coverage.xml"
+    -o "${RESULT_DIR}/UTs_coverage.xml"
 gcovr -r "${ROOT_DIR}" \
     --object-directory "${BUILD_DIR}" \
     --exclude 'tests/' \
     --json-summary \
     -o "${RESULT_DIR}/coverage-summary.json"
 
-printf 'report ready: %s\n' "${RESULT_DIR}/UTs_public_coverage.html"
+printf 'report ready: %s\n' "${RESULT_DIR}/UTs_coverage.html"
