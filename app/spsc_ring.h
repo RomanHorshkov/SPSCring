@@ -39,7 +39,7 @@ typedef struct spsc_ring spsc_ring_t;
  * @note `capacity` must fit into platform allocation limits
  *       (i.e., `capacity * sizeof(int)` must fit in `size_t`).
  */
-spsc_ring_t *spsc_ring_init(uint64_t capacity);
+spsc_ring_t* spsc_ring_init(uint64_t capacity);
 
 /**
  * @brief Push an element into the ring (producer-side).
@@ -50,7 +50,7 @@ spsc_ring_t *spsc_ring_init(uint64_t capacity);
  *
  * @note Must be called only by the single producer thread.
  */
-int spsc_ring_push(spsc_ring_t *ring, int fd);
+int spsc_ring_push(spsc_ring_t* ring, int fd);
 
 /**
  * @brief Pop an element from the ring (consumer-side).
@@ -61,7 +61,7 @@ int spsc_ring_push(spsc_ring_t *ring, int fd);
  *
  * @note Must be called only by the single consumer thread.
  */
-int spsc_ring_pop(spsc_ring_t *ring, int *out_fd);
+int spsc_ring_pop(spsc_ring_t* ring, int* out_fd);
 
 /**
  * @brief Check whether the ring is empty.
@@ -69,7 +69,7 @@ int spsc_ring_pop(spsc_ring_t *ring, int *out_fd);
  * @param ring Ring buffer instance.
  * @return 1 if empty, 0 otherwise. Returns 1 if `ring` is NULL.
  */
-int spsc_ring_is_empty(spsc_ring_t *ring);
+int spsc_ring_is_empty(spsc_ring_t* ring);
 
 /**
  * @brief Check whether the ring is full.
@@ -77,13 +77,13 @@ int spsc_ring_is_empty(spsc_ring_t *ring);
  * @param ring Ring buffer instance.
  * @return 1 if full, 0 otherwise. Returns 0 if `ring` is NULL.
  */
-int spsc_ring_is_full(spsc_ring_t *ring);
+int spsc_ring_is_full(spsc_ring_t* ring);
 
 /**
  * @brief Destroy a ring buffer and set the caller's pointer to NULL.
  *
  * @param ring Pointer to the ring pointer. Safe to pass NULL.
  */
-void spsc_ring_destroy(spsc_ring_t **ring);
+void spsc_ring_destroy(spsc_ring_t** ring);
 
 #endif /* SPSC_RING_H */

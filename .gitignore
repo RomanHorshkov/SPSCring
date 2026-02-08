@@ -2,3 +2,4 @@ build/
 cmake-build*/
 tests/results/*
 !tests/results/.gitkeep
+.clang-format
