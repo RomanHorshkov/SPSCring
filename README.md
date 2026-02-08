@@ -65,7 +65,8 @@ Note on data type vs index type:
 Builds are driven by scripts under `utils/`:
 
 - `utils/make_libs.sh` builds the static and shared libraries into `build/`.
-- `utils/make_UTs.sh` builds and runs unit tests with coverage output.
+- `utils/make_UTs_cov.sh` builds and runs unit tests with coverage output.
+- `utils/make_UTs_release.sh` builds and runs unit tests against release libraries.
 - `utils/make_ITs.sh` builds and runs integration tests.
 
 ## Tests & coverage
@@ -73,7 +74,13 @@ Builds are driven by scripts under `utils/`:
 Unit tests live under `tests/UTs` and are powered by [cmocka](https://cmocka.org/). Install `cmocka` before running:
 
 ```bash
-./utils/make_UTs.sh
+./utils/make_UTs_cov.sh
+```
+
+Release unit tests can be run with:
+
+```bash
+./utils/make_UTs_release.sh
 ```
 
 Integration tests live under `tests/ITs` and can be run with:
