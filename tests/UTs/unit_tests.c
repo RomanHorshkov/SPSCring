@@ -40,13 +40,13 @@ static void test_push_pop_fifo_order(void** state)
     (void)state;
     spsc_ring_t* ring = create_ring(8);
 
-    for(int value = 0; value < 5; ++value)
+    for(int value = 0; value < 8; ++value)
     {
         assert_int_equal(0, spsc_ring_push(ring, value));
     }
     assert_false(spsc_ring_is_empty(ring));
 
-    for(int expected = 0; expected < 5; ++expected)
+    for(int expected = 0; expected < 8; ++expected)
     {
         int value = -1;
         assert_int_equal(0, spsc_ring_pop(ring, &value));
