@@ -67,7 +67,7 @@ int spsc_ring_pop(spsc_ring_t* ring, int* out_fd);
  * @brief Check whether the ring is empty.
  *
  * @param ring Ring buffer instance.
- * @return 1 if empty, 0 otherwise. Returns 1 if `ring` is NULL.
+ * @return 1 if empty, 0 otherwise. Returns 0 if `ring` is NULL.
  */
 int spsc_ring_is_empty(spsc_ring_t* ring);
 
