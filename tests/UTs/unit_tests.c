@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <cmocka.h>
 
-#include "spsc_ring.h"
+#include "spscring.h"
 
 static spsc_ring_t *create_ring(uint64_t capacity)
 {
@@ -64,6 +64,7 @@ static void test_detects_full_ring(void **state)
     assert_int_equal(0, spsc_ring_push(ring, 11));
     assert_int_equal(0, spsc_ring_push(ring, 22));
     assert_int_equal(0, spsc_ring_push(ring, 33));
+    assert_int_equal(0, spsc_ring_push(ring, 44));
     assert_true(spsc_ring_is_full(ring));
     assert_int_equal(-1, spsc_ring_push(ring, 44));
 
@@ -87,7 +88,7 @@ static void test_push_returns_error_when_ring_full(void **state)
     (void)state;
     spsc_ring_t *ring = create_ring(8);
 
-    for(int i = 0; i < 7; ++i)
+    for(int i = 0; i < 8; ++i)
     {
         assert_int_equal(0, spsc_ring_push(ring, i));
     }
@@ -124,6 +125,17 @@ static void test_destroy_handles_null_ring_instance(void **state)
     assert_null(ring);
 }
 
+static void test_functions_with_null_ring(void ** state)
+{
+    assert_null(spsc_ring_init(0));
+    assert_null(spsc_ring_init(3));
+    assert_null(spsc_ring_init(7));
+    assert_int_equal(0, spsc_ring_push(NULL, 42));
+    assert_int_equal(0, spsc_ring_pop(NULL, NULL));
+    assert_int_equal(0, spsc_ring_is_empty(NULL));
+    assert_int_equal(0, spsc_ring_is_full(NULL));
+}
+
 int main(void)
 {
     const struct CMUnitTest tests[] = {
@@ -136,6 +148,7 @@ int main(void)
         cmocka_unit_test(test_pop_succeeds_when_not_empty),
         cmocka_unit_test(test_destroy_handles_null_pointer),
         cmocka_unit_test(test_destroy_handles_null_ring_instance),
+        cmocka_unit_test(test_functions_with_null_ring),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
