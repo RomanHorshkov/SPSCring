@@ -1,8 +1,30 @@
 # SPSCring
 
+![tests](https://img.shields.io/badge/tests-local-blue)
+![coverage](https://img.shields.io/badge/coverage-local-blue)
+![license](https://img.shields.io/badge/license-MIT-green)
+
 Single Producer Single Consumer (SPSC) ring buffer implemented in C11 with lock-free semantics for exactly one producer and one consumer thread.
 
-Public API documentation is in `app/spsc_ring.h`.
+Public API documentation is in `app/spscring.h`.
+
+## API contract
+
+The following behaviors are part of the public interface and must remain stable:
+
+- `spsc_ring_push(NULL, ...)` returns `-1`.
+- `spsc_ring_pop(NULL, ...)` returns `-1`.
+- `spsc_ring_is_empty(NULL)` returns `0`.
+- `spsc_ring_is_full(NULL)` returns `0`.
+- `spsc_ring_capacity(NULL)` returns `0`.
+- `spsc_ring_size(NULL)` returns `0`.
+- `spsc_ring_reset(NULL)` is a no-op.
+- `spsc_ring_destroy(NULL)` is a no-op.
+- Exactly one producer and one consumer are supported.
+- `spsc_ring_reset` is not thread-safe and must only be used when threads are stopped or externally synchronized.
+- The ring stores `int` values.
+- Capacity is fixed after initialization and must be a power of two.
+- Empty when `head == tail`, full when `(tail - head) == size`.
 
 ## Index width, wrap, and uptime
 
@@ -40,33 +62,28 @@ Note on data type vs index type:
 
 ## Build system
 
-The project now uses CMake exclusively. All logic lives under `app/` and produces both static (`libspscring.a`) and shared (`libspscring.so`) variants by default. The usual helper scripts are available under `utils/` to keep workflows consistent with the EMlog layout:
+Builds are driven by scripts under `utils/`:
 
-- `utils/build.sh` / `utils/build_libs.sh` – configure & build the libraries
-- `utils/build_tests.sh` – configure with `SPSCRING_BUILD_TESTS=ON` and build the cmocka test binary
-- `utils/run_tests.sh` – run the registered CTest suites
-- `utils/gen_coverage.sh` – rebuild with `--coverage`, run the tests, and emit gcovr/lcov reports into `tests/results/`
-
-Manual invocation is also straightforward:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --target spsc_ring_static spsc_ring_shared
-```
+- `utils/make_libs.sh` builds the static and shared libraries into `build/`.
+- `utils/make_UTs.sh` builds and runs unit tests with coverage output.
+- `utils/make_ITs.sh` builds and runs integration tests.
 
 ## Tests & coverage
 
-Unit tests live under `tests/` and are powered by [cmocka](https://cmocka.org/). Install `cmocka` (plus `pkg-config` if available) before running:
+Unit tests live under `tests/UTs` and are powered by [cmocka](https://cmocka.org/). Install `cmocka` before running:
 
 ```bash
-./utils/build_tests.sh
-./utils/run_tests.sh          # or: ctest --test-dir build
+./utils/make_UTs.sh
 ```
 
-Coverage generation mirrors the EMlog project. Install `gcovr` (preferred) or `lcov`/`genhtml` and run:
+Integration tests live under `tests/ITs` and can be run with:
 
 ```bash
-./utils/gen_coverage.sh
+./utils/make_ITs.sh
 ```
 
-Artifacts such as `UT_coverage.html`, `UT_coverage.xml`, and a JSON summary are written to `tests/results/`.
+Coverage artifacts are written to `tests/results/UTs/`.
+
+## License
+
+MIT, see `LICENSE`.
