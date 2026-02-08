@@ -2,9 +2,6 @@ name: ci
 
 on:
   push:
-    branches:
-      - master
-      - rearchitecturing
   pull_request:
   workflow_dispatch:
 
@@ -16,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deb-package:
-    name: Build .deb package
+  build:
+    name: Build libraries
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config fakeroot
+          sudo apt-get install -y build-essential
 
-      - name: Build .deb
+      - name: Build libraries
         run: |
-          ./utils/make_deb.sh
-
-      - name: Upload .deb artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: deb-package
-          path: |
-            build/debs/*.deb
+          ./utils/make_libs.sh
