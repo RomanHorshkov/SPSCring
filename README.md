@@ -1,8 +1,10 @@
 # SPSCring
 
-![tests](https://img.shields.io/badge/tests-local-blue)
-![coverage](https://img.shields.io/badge/coverage-local-blue)
-![license](https://img.shields.io/badge/license-MIT-green)
+![ci](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml/badge.svg)
+![tests](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml/badge.svg)
+![coverage](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml/badge.svg?branch=master&label=coverage)
+![package](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml/badge.svg)
+![license](https://img.shields.io/github/license/RomanHorshkov/SPSCring)
 
 Single Producer Single Consumer (SPSC) ring buffer implemented in C11 with lock-free semantics for exactly one producer and one consumer thread.
 
@@ -94,3 +96,26 @@ Coverage artifacts are written to `tests/results/UTs/`.
 ## License
 
 MIT, see `LICENSE`.
+
+## Release process
+
+Release flow is manual and tag-driven.
+
+1. Ensure `VERSION` matches the intended release tag (for example, `1.0.0`).
+2. Commit the version bump if needed.
+3. Create and push a Git tag (prefix `v` is required by the package workflow):
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This triggers the `package` workflow, which builds and uploads the `.deb` artifact.
+
+To trigger packaging without a tag:
+
+```bash
+gh workflow run package
+```
+
+(`gh` CLI required, or use the GitHub Actions UI to manually run the workflow.)
