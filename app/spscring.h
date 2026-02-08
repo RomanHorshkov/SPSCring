@@ -19,6 +19,8 @@
  * - `spsc_ring_init` and `spsc_ring_destroy` are not thread-safe.
  * - `spsc_ring_push` is producer-only.
  * - `spsc_ring_pop` is consumer-only.
+ * - `spsc_ring_size` is a snapshot and may change concurrently.
+ * - `spsc_ring_reset` is not thread-safe.
  */
 #ifndef SPSC_RING_H
 #define SPSC_RING_H
@@ -78,6 +80,33 @@ int spsc_ring_is_empty(spsc_ring_t* ring);
  * @return 1 if full, 0 otherwise. Returns 0 if `ring` is NULL.
  */
 int spsc_ring_is_full(spsc_ring_t* ring);
+
+/**
+ * @brief Return the fixed capacity of the ring.
+ *
+ * @param ring Ring buffer instance.
+ * @return Capacity, or 0 if `ring` is NULL.
+ */
+uint64_t spsc_ring_capacity(const spsc_ring_t* ring);
+
+/**
+ * @brief Return the current number of stored elements.
+ *
+ * @param ring Ring buffer instance.
+ * @return Current size, or 0 if `ring` is NULL.
+ *
+ * @note The value is a snapshot and may change concurrently.
+ */
+uint64_t spsc_ring_size(const spsc_ring_t* ring);
+
+/**
+ * @brief Reset the ring to an empty state.
+ *
+ * @param ring Ring buffer instance. Safe to pass NULL.
+ *
+ * @note Not thread-safe. Call only when producer/consumer are stopped.
+ */
+void spsc_ring_reset(spsc_ring_t* ring);
 
 /**
  * @brief Destroy a ring buffer and set the caller's pointer to NULL.

@@ -188,6 +188,26 @@ int spsc_ring_is_full(spsc_ring_t* ring)
             atomic_load_explicit(&ring->head, memory_order_acquire)) == ring->size;
 }
 
+uint64_t spsc_ring_capacity(const spsc_ring_t* ring)
+{
+    if(ring == NULL) return 0;
+    return ring->size;
+}
+
+uint64_t spsc_ring_size(const spsc_ring_t* ring)
+{
+    if(ring == NULL) return 0;
+    return atomic_load_explicit(&ring->tail, memory_order_acquire) -
+           atomic_load_explicit(&ring->head, memory_order_acquire);
+}
+
+void spsc_ring_reset(spsc_ring_t* ring)
+{
+    if(ring == NULL) return;
+    atomic_store_explicit(&ring->head, 0, memory_order_relaxed);
+    atomic_store_explicit(&ring->tail, 0, memory_order_relaxed);
+}
+
 void spsc_ring_destroy(spsc_ring_t** ring)
 {
     /*
