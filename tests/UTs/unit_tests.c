@@ -104,7 +104,9 @@ static void test_pop_succeeds_when_not_empty(void **state)
     spsc_ring_t *ring = create_ring(8);
 
     assert_int_equal(0, spsc_ring_push(ring, 77));
+    assert_int_equal(0, spsc_ring_push(ring, 77));
     int value = 0;
+    assert_int_equal(0, spsc_ring_pop(ring, NULL));
     assert_int_equal(0, spsc_ring_pop(ring, &value));
     assert_int_equal(77, value);
 
@@ -130,8 +132,9 @@ static void test_functions_with_null_ring(void ** state)
     assert_null(spsc_ring_init(0));
     assert_null(spsc_ring_init(3));
     assert_null(spsc_ring_init(7));
-    assert_int_equal(0, spsc_ring_push(NULL, 42));
-    assert_int_equal(0, spsc_ring_pop(NULL, NULL));
+    assert_null(spsc_ring_init(4611686018427387904));
+    assert_int_equal(-1, spsc_ring_push(NULL, 42));
+    assert_int_equal(-1, spsc_ring_pop(NULL, NULL));
     assert_int_equal(0, spsc_ring_is_empty(NULL));
     assert_int_equal(0, spsc_ring_is_full(NULL));
 }
