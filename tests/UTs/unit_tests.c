@@ -113,6 +113,44 @@ static void test_pop_succeeds_when_not_empty(void** state)
     destroy_ring(&ring);
 }
 
+static void test_capacity_and_size(void** state)
+{
+    (void)state;
+    spsc_ring_t* ring = create_ring(8);
+    assert_int_equal(8, spsc_ring_capacity(ring));
+    assert_int_equal(0, spsc_ring_size(ring));
+
+    assert_int_equal(0, spsc_ring_push(ring, 1));
+    assert_int_equal(0, spsc_ring_push(ring, 2));
+    assert_int_equal(2, spsc_ring_size(ring));
+
+    int v = -1;
+    assert_int_equal(0, spsc_ring_pop(ring, &v));
+    assert_int_equal(1, v);
+    assert_int_equal(1, spsc_ring_size(ring));
+
+    destroy_ring(&ring);
+}
+
+static void test_reset_clears_ring(void** state)
+{
+    (void)state;
+    spsc_ring_t* ring = create_ring(8);
+    assert_int_equal(0, spsc_ring_push(ring, 10));
+    assert_int_equal(0, spsc_ring_push(ring, 20));
+    assert_false(spsc_ring_is_empty(ring));
+    assert_int_equal(2, spsc_ring_size(ring));
+
+    spsc_ring_reset(ring);
+    assert_true(spsc_ring_is_empty(ring));
+    assert_int_equal(0, spsc_ring_size(ring));
+
+    int v = -1;
+    assert_int_equal(-1, spsc_ring_pop(ring, &v));
+
+    destroy_ring(&ring);
+}
+
 static void test_destroy_handles_null_pointer(void** state)
 {
     (void)state;
@@ -137,6 +175,9 @@ static void test_functions_with_null_ring(void** state)
     assert_int_equal(-1, spsc_ring_pop(NULL, NULL));
     assert_int_equal(0, spsc_ring_is_empty(NULL));
     assert_int_equal(0, spsc_ring_is_full(NULL));
+    assert_int_equal(0, spsc_ring_capacity(NULL));
+    assert_int_equal(0, spsc_ring_size(NULL));
+    spsc_ring_reset(NULL);
 }
 
 int main(void)
@@ -149,6 +190,8 @@ int main(void)
         cmocka_unit_test(test_pop_from_empty_ring),
         cmocka_unit_test(test_push_returns_error_when_ring_full),
         cmocka_unit_test(test_pop_succeeds_when_not_empty),
+        cmocka_unit_test(test_capacity_and_size),
+        cmocka_unit_test(test_reset_clears_ring),
         cmocka_unit_test(test_destroy_handles_null_pointer),
         cmocka_unit_test(test_destroy_handles_null_ring_instance),
         cmocka_unit_test(test_functions_with_null_ring),
