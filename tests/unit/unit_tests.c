@@ -6,7 +6,7 @@
 
 #include "spsc_ring.h"
 
-static spsc_ring_t *create_ring(uint32_t capacity)
+static spsc_ring_t *create_ring(uint64_t capacity)
 {
     spsc_ring_t *ring = spsc_ring_init(capacity);
     assert_non_null(ring);
