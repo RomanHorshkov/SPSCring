@@ -22,8 +22,16 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential pkg-config libcmocka-dev
 
       - name: Build libraries
         run: |
           ./utils/make_libs.sh
+
+      - name: Build and run release UTs
+        run: |
+          ./utils/make_UTs_release.sh
+
+      - name: Build and run ITs
+        run: |
+          ./utils/make_ITs.sh

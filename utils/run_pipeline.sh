@@ -42,7 +42,7 @@ stage() {
     printf '\n%s== [%s] %s ==%s\n' "${c_bold}" "${PKG_LABEL}" "${label}" "${c_rst}"
     printf '%s  $ %s%s\n' "${c_dim}" "$*" "${c_rst}"
     local rc
-    "$@" >"${log}" 2>&1; rc=$?
+    "$@" 2>&1 | tee "${log}"; rc=$?
     if (( rc == 0 )); then
         printf '%s  ✓ %s%s  (%s)\n' "${c_grn}" "${label}" "${c_rst}" "${log}"
         RESULTS+=("PASS|${label}|${rc}")
@@ -90,9 +90,9 @@ report_debs() {
 printf '%s\u2554\u2550\u2550 %s pipeline \u2550\u2550\u2550\u2550%s\n' "${c_bold}" "${PKG_LABEL}" "${c_rst}"
 
 stage "build"          bash "${SCRIPT_DIR}/make_libs.sh"
-stage "ut-release"     bash "${SCRIPT_DIR}/make_UTs_release.sh"
-stage "ut-coverage"    bash "${SCRIPT_DIR}/make_UTs_cov.sh"
-stage "integration"    bash "${SCRIPT_DIR}/make_ITs.sh"
+stage "unit-tests-release" bash "${SCRIPT_DIR}/make_UTs_release.sh"
+stage "unit-tests-coverage" bash "${SCRIPT_DIR}/make_UTs_cov.sh"
+stage "integration-tests"  bash "${SCRIPT_DIR}/make_ITs.sh"
 stage "package"        bash "${SCRIPT_DIR}/make_deb.sh"
 
 report_debs || FAILED=1
