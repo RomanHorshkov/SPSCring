@@ -26,7 +26,7 @@ jobs:
 
       - name: Build libraries
         run: |
-          ./utils/make_libs.sh
+          ./utils/build_libs.sh
 
       - name: Build and run release UTs
         run: |
