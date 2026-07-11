@@ -89,11 +89,11 @@ report_debs() {
 
 printf '%s\u2554\u2550\u2550 %s pipeline \u2550\u2550\u2550\u2550%s\n' "${c_bold}" "${PKG_LABEL}" "${c_rst}"
 
-stage "build"          bash "${SCRIPT_DIR}/make_libs.sh"
+stage "build"          bash "${SCRIPT_DIR}/build_libs.sh"
 stage "unit-tests-release" bash "${SCRIPT_DIR}/make_UTs_release.sh"
 stage "unit-tests-coverage" bash "${SCRIPT_DIR}/make_UTs_cov.sh"
 stage "integration-tests"  bash "${SCRIPT_DIR}/make_ITs.sh"
-stage "package"        bash "${SCRIPT_DIR}/make_deb.sh"
+stage "package"        bash "${SCRIPT_DIR}/build_deb.sh"
 
 report_debs || FAILED=1
 

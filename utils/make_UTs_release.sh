@@ -13,8 +13,9 @@ BUILD_DIR="${ROOT_DIR}/build/UTs_release"
 
 mkdir -p "$BUILD_DIR"
 
-# Build release libraries first.
-"${ROOT_DIR}/utils/make_libs.sh"
+# Build release libraries first (flat build/libspscring.a is a symlink into
+# build/release/ maintained by build_libs.sh).
+"${ROOT_DIR}/utils/build_libs.sh" release
 
 # Build unit test objects (release flags).
 UT_CFLAGS=(-std=c11 -O2 -DNDEBUG -D_GNU_SOURCE -Iapp -Itests/UTs)

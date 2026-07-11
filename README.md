@@ -131,3 +131,29 @@ gh workflow run package
 ```
 
 (`gh` CLI required, or use the GitHub Actions UI to manually run the workflow.)
+
+## Build profiles & hardening
+
+Builds go through `utils/build_libs.sh [profile ...]`, driven by the shared catalog `utils/gcc_build_profiles.sh` (synced verbatim from `Utils/compilation/`, never edited locally); artifacts land in `build/<profile>/`; `utils/check_hardening.sh` gates every release artifact.
+
+| Profile | Optimization | Warnings | Instrumentation | Hardened | Use it for |
+|---|---|---|---|---|---|
+| debug | `-Og -g3` | core | — | no | day-to-day development |
+| audit | `-O1 -g3` | everything + `-fanalyzer` | — | yes | compiler-driven validation |
+| sanitize | `-O1 -g3` | strict | ASan+UBSan+LSan | yes minus FORTIFY — conflicts with ASan | runtime bug hunting |
+| release | `-O2 -DNDEBUG` | strict | — | yes — full set below | production / the deb payload |
+| native | `-O3 -flto -march=native` | strict | — | yes | benchmarks on the deploy box |
+| extreme | `-O3 -flto -march=native` | core | — | deliberately none | max-perf experiments only |
+
+Release hardening, by stage:
+
+| Flag | Stage | Purpose |
+|---|---|---|
+| `-fstack-protector-strong` | compile | stack canary on frames with arrays / address-taken locals |
+| `-fstack-clash-protection` | compile | page-by-page stack growth — the guard page can't be jumped |
+| `-fcf-protection=full` | compile | x86-64 CET: indirect-branch tracking + shadow stack, NOP on older CPUs |
+| `-D_FORTIFY_SOURCE=3` | preprocess | checked libc calls with dynamic object sizes |
+| `-fPIC` | compile | position-independent code for the .so |
+| `-Wl,-z,relro -Wl,-z,now` | link | GOT/PLT read-only after load — full RELRO |
+| `-Wl,-z,noexecstack` | link | non-executable stack asserted |
+| `-Wl,-z,defs` | link .so | undefined symbols fail the build not the load |
