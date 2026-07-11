@@ -146,7 +146,7 @@ build_profile() {
     ln -sfn "${shared_realname}" "${profile_dir}/${shared_linkname}"
 
     if [[ "${profile}" == "release" ]]; then
-        # Backwards compatibility: older scripts (make_deb-era, make_UTs_release)
+        # Backwards compatibility: the deb script and test scripts use the flat
         # expect the flat build/ lib paths. Keep them as symlinks into
         # build/release/.
         ln -sfn "release/${shared_realname}" "${BUILD_DIR}/${shared_realname}"
