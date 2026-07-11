@@ -132,6 +132,40 @@ static void test_capacity_and_size(void** state)
     destroy_ring(&ring);
 }
 
+/* Regression for the size() underflow: across a long wrap-around sequence the
+ * reported size must stay a sane [0, capacity] and equal the true occupancy —
+ * never a huge value from tail-before-head sampling or from t-h wrapping. */
+static void test_size_stays_bounded_across_wraparound(void** state)
+{
+    (void)state;
+    spsc_ring_t*   ring      = create_ring(4);
+    const uint64_t cap       = spsc_ring_capacity(ring);
+    int            occupancy = 0;
+
+    for(int step = 0; step < 1000; ++step)
+    {
+        /* Push while there's room, pop while there's data — an uneven mix that
+         * marches head and tail far past the ring size (exercises wrap). */
+        if((step % 3) != 0 && occupancy < (int)cap)
+        {
+            assert_int_equal(0, spsc_ring_push(ring, step));
+            occupancy++;
+        }
+        else if(occupancy > 0)
+        {
+            int v = 0;
+            assert_int_equal(0, spsc_ring_pop(ring, &v));
+            occupancy--;
+        }
+
+        uint64_t sz = spsc_ring_size(ring);
+        assert_int_equal((uint64_t)occupancy, sz); /* exact in single-thread */
+        assert_true(sz <= cap);                    /* the clamp/bound invariant */
+    }
+
+    destroy_ring(&ring);
+}
+
 static void test_reset_clears_ring(void** state)
 {
     (void)state;
@@ -191,6 +225,7 @@ int main(void)
         cmocka_unit_test(test_push_returns_error_when_ring_full),
         cmocka_unit_test(test_pop_succeeds_when_not_empty),
         cmocka_unit_test(test_capacity_and_size),
+        cmocka_unit_test(test_size_stays_bounded_across_wraparound),
         cmocka_unit_test(test_reset_clears_ring),
         cmocka_unit_test(test_destroy_handles_null_pointer),
         cmocka_unit_test(test_destroy_handles_null_ring_instance),
