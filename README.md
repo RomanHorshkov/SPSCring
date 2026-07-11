@@ -63,10 +63,13 @@ Examples:
 
 Builds are driven by scripts under `utils/`:
 
-- `utils/make_libs.sh` builds the static and shared libraries into `build/`.
+- `utils/build_libs.sh [profile …]` builds the static and shared libraries per
+  profile into `build/<profile>/` (release gated by `check_hardening.sh`).
 - `utils/make_UTs_cov.sh` builds and runs unit tests with coverage output.
 - `utils/make_UTs_release.sh` builds and runs unit tests against release libraries.
 - `utils/make_ITs.sh` builds and runs integration tests.
+- `utils/build_deb.sh` builds the release deb + `SHA256SUMS` (VERSION-validated,
+  hardening-checked); `utils/run_pipeline.sh` runs the whole board.
 
 ## Dependencies
 
