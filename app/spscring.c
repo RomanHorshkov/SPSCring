@@ -29,14 +29,27 @@
  * - full: (tail - head) == size
  * - empty: head == tail
  */
+#ifndef SPSC_CACHELINE
+#    define SPSC_CACHELINE 64u /* typical L1 line; only affects layout, not correctness */
+#endif
+
 struct spsc_ring
 {
-    int*             buf;  /* Circular buffer array of integers */
-    uint64_t         size; /* Ring size, MUST be power of 2 */
-    uint64_t         mask; /* mask = size - 1 for fast modulo */
-    _Atomic uint64_t head; /* Consumer's read index (atomically updated) */
-    _Atomic uint64_t tail; /* Producer's write index (atomically updated) */
+    int*     buf;  /* Circular buffer array of integers (read-only after init) */
+    uint64_t size; /* Ring size, MUST be power of 2 (read-only after init) */
+    uint64_t mask; /* mask = size - 1 for fast modulo   (read-only after init) */
+    /* Consumer writes head, producer writes tail. Put each on its OWN cache line
+     * so one side's update never invalidates the other side's line (false
+     * sharing would otherwise bounce the line between cores on every op). */
+    _Alignas(SPSC_CACHELINE) _Atomic uint64_t head; /* consumer's read index  */
+    _Alignas(SPSC_CACHELINE) _Atomic uint64_t tail; /* producer's write index */
 };
+
+/* Compile-time proof that the false-sharing fix holds: head and tail must sit at
+ * least one cache line apart (the test suite can't see these offsets — the type
+ * is opaque — so we assert it here where the layout is defined). */
+_Static_assert(offsetof(struct spsc_ring, tail) - offsetof(struct spsc_ring, head) >= SPSC_CACHELINE,
+               "spsc_ring head and tail must be on separate cache lines");
 
 spsc_ring_t* spsc_ring_init(uint64_t capacity)
 {
@@ -45,9 +58,14 @@ spsc_ring_t* spsc_ring_init(uint64_t capacity)
 
     if(capacity > (uint64_t)(SIZE_MAX / sizeof(int))) return NULL;
 
-    spsc_ring_t* ring = calloc(1, sizeof(spsc_ring_t));
+    /* The struct is over-aligned (head/tail on separate cache lines), so it must
+     * be allocated with matching alignment — plain malloc/calloc only guarantee
+     * max_align_t. aligned_alloc needs size to be a multiple of the alignment,
+     * which holds because _Alignas pads sizeof up to that alignment. It does not
+     * zero, so every field is set explicitly below. */
+    spsc_ring_t* ring = aligned_alloc(_Alignof(spsc_ring_t), sizeof(spsc_ring_t));
     if(!ring) return NULL;
-    /* 
+    /*
      * Store the capacity and calculate the bitmask which allows to efficiently wrap indices:
      * Instead of: index % size (expensive division) use: index & mask (fast bitwise AND)
      * This only works when size is a power of 2
@@ -71,7 +89,7 @@ spsc_ring_t* spsc_ring_init(uint64_t capacity)
      * Initialize atomic head and tail pointers to 0
      * atomic_store() ensures these writes are visible to other threads
      * with proper memory ordering (default sequential consistency)
-     * 
+     *
      * Initial state: head = tail = 0 (empty buffer)
      */
     atomic_store(&ring->head, 0);
@@ -107,7 +125,7 @@ int spsc_ring_push(spsc_ring_t* ring, int fd)
      * Advance the tail pointer atomically with release ordering
      * Release ordering ensures that the buffer write above is visible
      * to the consumer before this tail update becomes visible
-     * 
+     *
      * This creates a happens-before relationship: buffer write → tail update
      * Consumer will see tail update only after buffer write is complete
      */
@@ -134,11 +152,11 @@ int spsc_ring_pop(spsc_ring_t* ring, int* out_fd)
     if(out_fd)
     {
         /*
-        * Read the data from current head position
-        * Apply mask to wrap the index within buffer bounds
-        * This is a regular (non-atomic) load because only consumer reads from this slot
-        * Store result in caller-provided output parameter
-        */
+         * Read the data from current head position
+         * Apply mask to wrap the index within buffer bounds
+         * This is a regular (non-atomic) load because only consumer reads from this slot
+         * Store result in caller-provided output parameter
+         */
         *out_fd = ring->buf[(size_t)(h & ring->mask)];
     }
 
@@ -146,7 +164,7 @@ int spsc_ring_pop(spsc_ring_t* ring, int* out_fd)
      * Advance the head pointer atomically with release ordering
      * Release ordering ensures that the buffer read above completes
      * before this head update becomes visible to the producer
-     * 
+     *
      * This creates a happens-before relationship: buffer read → head update
      * Producer will see head update only after buffer read is complete
      * This allows producer to safely reuse this buffer slot
@@ -168,8 +186,7 @@ int spsc_ring_is_empty(spsc_ring_t* ring)
      * This ensures visibility of all buffer writes performed by the producer before advancing tail
      */
 
-    return atomic_load_explicit(&ring->head, memory_order_relaxed) ==
-           atomic_load_explicit(&ring->tail, memory_order_acquire);
+    return atomic_load_explicit(&ring->head, memory_order_relaxed) == atomic_load_explicit(&ring->tail, memory_order_acquire);
 }
 
 int spsc_ring_is_full(spsc_ring_t* ring)
@@ -184,8 +201,8 @@ int spsc_ring_is_full(spsc_ring_t* ring)
      * This ensures visibility of all buffer reads completed by the consumer before advancing head
      */
 
-    return (atomic_load_explicit(&ring->tail, memory_order_relaxed) -
-            atomic_load_explicit(&ring->head, memory_order_acquire)) == ring->size;
+    return (atomic_load_explicit(&ring->tail, memory_order_relaxed) - atomic_load_explicit(&ring->head, memory_order_acquire)) ==
+           ring->size;
 }
 
 uint64_t spsc_ring_capacity(const spsc_ring_t* ring)
@@ -197,8 +214,15 @@ uint64_t spsc_ring_capacity(const spsc_ring_t* ring)
 uint64_t spsc_ring_size(const spsc_ring_t* ring)
 {
     if(ring == NULL) return 0;
-    return atomic_load_explicit(&ring->tail, memory_order_acquire) -
-           atomic_load_explicit(&ring->head, memory_order_acquire);
+    /* APPROXIMATE under concurrency (either side may move between the two loads).
+     * Load head BEFORE tail: both counters only increase and tail >= head always,
+     * so a head sampled earlier can never exceed a tail sampled later — this
+     * removes the underflow the reverse order allowed. Clamp to capacity as a
+     * final guard so callers never see a nonsense count. */
+    uint64_t h = atomic_load_explicit(&ring->head, memory_order_acquire);
+    uint64_t t = atomic_load_explicit(&ring->tail, memory_order_acquire);
+    uint64_t n = t - h;
+    return (n > ring->size) ? ring->size : n;
 }
 
 void spsc_ring_reset(spsc_ring_t* ring)
