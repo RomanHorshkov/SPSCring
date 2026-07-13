@@ -1,4 +1,4 @@
-name: CI
+name: Sanitizers
 
 on:
   push:
@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build libraries
+  sanitizers:
+    name: ASan, UBSan, and LSan (UTs + ITs)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential libcmocka-dev
 
-      - name: Build libraries
+      - name: Build and run sanitized UTs and ITs
         run: |
-          ./utils/build_libs.sh
+          ./utils/make_sanitizer_tests.sh

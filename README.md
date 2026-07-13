@@ -3,6 +3,7 @@
 [![CI](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml)
 [![UTs](https://github.com/RomanHorshkov/SPSCring/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/unit-tests.yml)
 [![ITs](https://github.com/RomanHorshkov/SPSCring/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/integration-tests.yml)
+[![Sanitizers](https://github.com/RomanHorshkov/SPSCring/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/sanitizers.yml)
 [![Coverage 100%](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml/badge.svg?branch=master&label=coverage%20100%25)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml)
 [![Package](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml)
 [![License](https://img.shields.io/github/license/RomanHorshkov/SPSCring)](LICENSE)
@@ -83,6 +84,8 @@ Builds are driven by scripts under `utils/`:
 - `utils/make_UTs_cov.sh` builds and runs unit tests with coverage output.
 - `utils/make_UTs_release.sh` builds and runs unit tests against release libraries.
 - `utils/make_ITs.sh` builds and runs integration tests.
+- `utils/make_sanitizer_tests.sh` builds and runs both suites with ASan, UBSan,
+  and LSan.
 - `utils/build_deb.sh` builds the release deb + `SHA256SUMS` (VERSION-validated,
   hardening-checked); `utils/run_pipeline.sh` runs the whole board.
 
@@ -120,6 +123,18 @@ Integration tests live under `tests/ITs` and can be run with:
 ```bash
 ./utils/make_ITs.sh
 ```
+
+Memory and undefined-behavior checks run both suites with AddressSanitizer,
+UndefinedBehaviorSanitizer, and LeakSanitizer:
+
+```bash
+./utils/make_sanitizer_tests.sh
+```
+
+The **Sanitizers** workflow runs this command on every push and pull request.
+ThreadSanitizer remains a separate opt-in diagnostic because it cannot be
+combined with ASan and is not reliable enough on every host for a required
+pipeline gate.
 
 Coverage artifacts are written to `tests/results/UTs/`.
 The coverage workflow runs on every push and pull request. It uses the same

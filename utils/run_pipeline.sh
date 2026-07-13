@@ -93,6 +93,7 @@ stage "build"          bash "${SCRIPT_DIR}/build_libs.sh"
 stage "unit-tests-release" bash "${SCRIPT_DIR}/make_UTs_release.sh"
 stage "unit-tests-coverage" bash "${SCRIPT_DIR}/make_UTs_cov.sh"
 stage "integration-tests"  bash "${SCRIPT_DIR}/make_ITs.sh"
+stage "sanitizer-tests"    bash "${SCRIPT_DIR}/make_sanitizer_tests.sh"
 stage "package"        bash "${SCRIPT_DIR}/build_deb.sh"
 
 report_debs || FAILED=1
