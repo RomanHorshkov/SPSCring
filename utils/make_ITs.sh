@@ -14,7 +14,7 @@ BUILD_DIR="${ROOT_DIR}/build/ITs"
 mkdir -p "$BUILD_DIR"
 
 # Build spscring object (integration tests link against this object).
-gcc -std=c11 -O2 -g -Iapp -c app/spscring.c -o "${BUILD_DIR}/spscring.o"
+gcc -std=c11 -O2 -g -DSPSC_REQUIRE_ALWAYS_LOCK_FREE -Iapp -c app/spscring.c -o "${BUILD_DIR}/spscring.o"
 
 # Build integration test objects.
 IT_CFLAGS=(-std=c11 -O2 -g -D_GNU_SOURCE -Iapp -Itests/ITs)
