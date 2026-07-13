@@ -281,6 +281,7 @@ static void test_destroy_handles_null_ring_instance(void** state)
 
 static void test_functions_with_null_ring(void** state)
 {
+    (void)state;
     assert_null(spsc_ring_init(0));
     assert_null(spsc_ring_init(3));
     assert_null(spsc_ring_init(7));
