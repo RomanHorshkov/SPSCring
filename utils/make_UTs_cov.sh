@@ -17,11 +17,14 @@ mkdir -p "$BUILD_DIR" "$RESULT_DIR"
 # Clean previous coverage data (otherwise gcov/gcovr can fail with stamp mismatches).
 rm -f "${BUILD_DIR}"/*.gcda "${BUILD_DIR}"/*.gcno "${BUILD_DIR}"/*.gcov 2>/dev/null || true
 
-# Build spscring object with coverage (public tests link against this object).
-gcc -std=c11 -O0 -g --coverage -Iapp -c app/spscring.c -o "${BUILD_DIR}/spscring.o"
+# Build a coverage-only library with the private allocation seam enabled. This
+# allows deterministic testing of both allocation-failure paths without
+# changing the production library's API or exported symbols.
+gcc -std=c11 -O0 -g --coverage -DSPSC_RING_TESTING -Iapp -Itests/UTs \
+    -c app/spscring.c -o "${BUILD_DIR}/spscring.o"
 
 # Build unit test objects.
-UT_CFLAGS=(-std=c11 -O0 -g --coverage -D_GNU_SOURCE -Iapp -Itests/UTs)
+UT_CFLAGS=(-std=c11 -O0 -g --coverage -D_GNU_SOURCE -DSPSC_RING_TESTING -Iapp -Itests/UTs)
 for src in tests/UTs/*.c; do
   out="${BUILD_DIR}/$(basename "${src%.c}").o"
   gcc "${UT_CFLAGS[@]}" -c "$src" -o "$out"
@@ -53,6 +56,8 @@ gcovr -r "${ROOT_DIR}" \
     --object-directory "${BUILD_DIR}" \
     --exclude 'tests/' \
     --json-summary \
+    --fail-under-line 100 \
+    --fail-under-branch 100 \
     -o "${RESULT_DIR}/coverage-summary.json"
 
-printf 'report ready: %s\n' "${RESULT_DIR}/UTs_coverage.html"
+printf '100%% line and branch coverage gate passed; report ready: %s\n' "${RESULT_DIR}/UTs_coverage.html"

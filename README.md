@@ -107,6 +107,8 @@ Integration tests live under `tests/ITs` and can be run with:
 ```
 
 Coverage artifacts are written to `tests/results/UTs/`.
+The coverage test is a 100% line and branch gate, run by GitHub Actions on
+every push and pull request.
 
 ## License
 
