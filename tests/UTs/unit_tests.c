@@ -2,9 +2,14 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <cmocka.h>
 #include "spscring.h"
+
+#ifdef SPSC_RING_TESTING
+#    include "spscring_test_hooks.h"
+#endif
 
 static spsc_ring_t* create_ring(uint64_t capacity)
 {
@@ -34,6 +39,53 @@ static void test_init_rejects_invalid_capacity(void** state)
     assert_null(spsc_ring_init(0));
     assert_null(spsc_ring_init(3));
 }
+
+#ifdef SPSC_RING_TESTING
+static unsigned int free_call_count;
+
+static void* fail_aligned_alloc(size_t alignment, size_t size)
+{
+    (void)alignment;
+    (void)size;
+    return NULL;
+}
+
+static void* fail_calloc(size_t count, size_t size)
+{
+    (void)count;
+    (void)size;
+    return NULL;
+}
+
+static void counting_free(void* ptr)
+{
+    free_call_count++;
+    free(ptr);
+}
+
+static void test_init_handles_control_allocation_failure(void** state)
+{
+    (void)state;
+    spsc_ring_test_set_allocators(fail_aligned_alloc, calloc, free);
+    assert_null(spsc_ring_init(16));
+}
+
+static void test_init_cleans_up_after_buffer_allocation_failure(void** state)
+{
+    (void)state;
+    spsc_ring_test_set_allocators(aligned_alloc, fail_calloc, counting_free);
+    assert_null(spsc_ring_init(16));
+    assert_int_equal(1, (int)free_call_count);
+}
+
+static int reset_allocator_hooks(void** state)
+{
+    (void)state;
+    spsc_ring_test_reset_allocators();
+    free_call_count = 0U;
+    return 0;
+}
+#endif
 
 static void test_push_pop_fifo_order(void** state)
 {
@@ -219,6 +271,10 @@ int main(void)
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_init_accepts_power_of_two),
         cmocka_unit_test(test_init_rejects_invalid_capacity),
+#ifdef SPSC_RING_TESTING
+        cmocka_unit_test_setup_teardown(test_init_handles_control_allocation_failure, reset_allocator_hooks, reset_allocator_hooks),
+        cmocka_unit_test_setup_teardown(test_init_cleans_up_after_buffer_allocation_failure, reset_allocator_hooks, reset_allocator_hooks),
+#endif
         cmocka_unit_test(test_push_pop_fifo_order),
         cmocka_unit_test(test_detects_full_ring),
         cmocka_unit_test(test_pop_from_empty_ring),

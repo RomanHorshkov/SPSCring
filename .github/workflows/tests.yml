@@ -33,8 +33,7 @@ jobs:
           ./utils/make_ITs.sh
 
   coverage-tests:
-    name: Coverage tests (UTs)
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    name: Coverage gate (100% UTs)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +48,7 @@ jobs:
           ./utils/make_UTs_cov.sh
 
       - name: Upload coverage artifacts (HTML/XML/JSON)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: uts-coverage

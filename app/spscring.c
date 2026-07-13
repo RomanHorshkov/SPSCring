@@ -21,6 +21,52 @@
 #include <stdint.h>    /* uint64_t and other fixed-width integer types */
 #include <stdlib.h>    /* malloc, calloc, free */
 
+/* Test builds replace the two allocation calls through this deliberately
+ * private seam. Production builds call the C library directly and export no
+ * additional symbols. */
+#ifdef SPSC_RING_TESTING
+#    include "spscring_test_hooks.h"
+
+static spsc_ring_test_aligned_alloc_fn spsc_ring_aligned_allocator = aligned_alloc;
+static spsc_ring_test_calloc_fn        spsc_ring_calloc_allocator  = calloc;
+static spsc_ring_test_free_fn          spsc_ring_free_allocator    = free;
+
+void spsc_ring_test_set_allocators(spsc_ring_test_aligned_alloc_fn aligned_allocator,
+                                   spsc_ring_test_calloc_fn        calloc_allocator,
+                                   spsc_ring_test_free_fn          free_allocator)
+{
+    spsc_ring_aligned_allocator = aligned_allocator;
+    spsc_ring_calloc_allocator  = calloc_allocator;
+    spsc_ring_free_allocator    = free_allocator;
+}
+
+void spsc_ring_test_reset_allocators(void)
+{
+    spsc_ring_aligned_allocator = aligned_alloc;
+    spsc_ring_calloc_allocator  = calloc;
+    spsc_ring_free_allocator    = free;
+}
+
+static void* spsc_ring_allocate_control(size_t alignment, size_t size)
+{
+    return spsc_ring_aligned_allocator(alignment, size);
+}
+
+static void* spsc_ring_allocate_buffer(size_t count, size_t size)
+{
+    return spsc_ring_calloc_allocator(count, size);
+}
+
+static void spsc_ring_release(void* ptr)
+{
+    spsc_ring_free_allocator(ptr);
+}
+#else
+#    define spsc_ring_allocate_control(alignment, size) aligned_alloc((alignment), (size))
+#    define spsc_ring_allocate_buffer(count, size) calloc((count), (size))
+#    define spsc_ring_release(ptr) free((ptr))
+#endif
+
 /*
  * Internal structure and invariants.
  * - size is a power of two
@@ -63,7 +109,7 @@ spsc_ring_t* spsc_ring_init(uint64_t capacity)
      * max_align_t. aligned_alloc needs size to be a multiple of the alignment,
      * which holds because _Alignas pads sizeof up to that alignment. It does not
      * zero, so every field is set explicitly below. */
-    spsc_ring_t* ring = aligned_alloc(_Alignof(spsc_ring_t), sizeof(spsc_ring_t));
+    spsc_ring_t* ring = spsc_ring_allocate_control(_Alignof(spsc_ring_t), sizeof(spsc_ring_t));
     if(!ring) return NULL;
     /*
      * Store the capacity and calculate the bitmask which allows to efficiently wrap indices:
@@ -78,10 +124,10 @@ spsc_ring_t* spsc_ring_init(uint64_t capacity)
      * calloc() initializes all elements to 0, which is helpful for debugging
      * malloc() can be used for slightly better performance in production
      */
-    ring->buf = calloc(capacity, sizeof(*ring->buf));
+    ring->buf = spsc_ring_allocate_buffer(capacity, sizeof(*ring->buf));
     if(!ring->buf)
     {
-        free(ring);
+        spsc_ring_release(ring);
         return NULL;
     }
 
@@ -245,8 +291,8 @@ void spsc_ring_destroy(spsc_ring_t** ring)
          * Free the dynamically allocated buffer array
          * releasing the memory that holds the actual ring data
          */
-        free((*ring)->buf);
-        free(*ring);
+        spsc_ring_release((*ring)->buf);
+        spsc_ring_release(*ring);
         *ring = NULL;
     }
 }
