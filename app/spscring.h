@@ -8,7 +8,7 @@
  * - Capacity must be a power of two.
  * - Elements stored are `int` values.
  * - Indices are 64-bit and wrap-safe when used through this API.
- * - 64-bit atomic operations are expected to be available on the target.
+ * - Initialization rejects targets where either 64-bit atomic counter is not lock-free.
  *
  * Correctness:
  * - Empty when `head == tail`.
@@ -21,6 +21,12 @@
  * - `spsc_ring_pop` is consumer-only.
  * - `spsc_ring_size` is a snapshot and may change concurrently.
  * - `spsc_ring_reset` is not thread-safe.
+ *
+ * Lock-free target policy:
+ * - `spsc_ring_init` checks the two actual `_Atomic uint64_t` objects with C11
+ *   `atomic_is_lock_free` and returns NULL if either is lock-backed.
+ * - Project production builds define `SPSC_REQUIRE_ALWAYS_LOCK_FREE`; GCC/Clang
+ *   then reject an unsupported target while compiling the library.
  */
 #ifndef SPSC_RING_H
 #define SPSC_RING_H
@@ -36,7 +42,8 @@ typedef struct spsc_ring spsc_ring_t;
  * @brief Create and initialize a ring buffer.
  *
  * @param capacity Number of elements the ring can hold. Must be a power of two.
- * @return Pointer to a new ring on success, or NULL on invalid capacity or allocation failure.
+ * @return Pointer to a new ring on success, or NULL on invalid capacity,
+ *         allocation failure, or a target without lock-free 64-bit atomics.
  *
  * @note `capacity` must fit into platform allocation limits
  *       (i.e., `capacity * sizeof(int)` must fit in `size_t`).

@@ -42,6 +42,7 @@ static void test_init_rejects_invalid_capacity(void** state)
 
 #ifdef SPSC_RING_TESTING
 static unsigned int free_call_count;
+static unsigned int calloc_call_count;
 
 static void* fail_aligned_alloc(size_t alignment, size_t size)
 {
@@ -55,6 +56,12 @@ static void* fail_calloc(size_t count, size_t size)
     (void)count;
     (void)size;
     return NULL;
+}
+
+static void* counting_calloc(size_t count, size_t size)
+{
+    calloc_call_count++;
+    return calloc(count, size);
 }
 
 static void counting_free(void* ptr)
@@ -78,11 +85,32 @@ static void test_init_cleans_up_after_buffer_allocation_failure(void** state)
     assert_int_equal(1, (int)free_call_count);
 }
 
+static void test_init_rejects_non_lock_free_head(void** state)
+{
+    (void)state;
+    spsc_ring_test_set_allocators(aligned_alloc, counting_calloc, counting_free);
+    spsc_ring_test_set_lock_free_overrides(0, 1);
+    assert_null(spsc_ring_init(16));
+    assert_int_equal(0, (int)calloc_call_count);
+    assert_int_equal(1, (int)free_call_count);
+}
+
+static void test_init_rejects_non_lock_free_tail(void** state)
+{
+    (void)state;
+    spsc_ring_test_set_allocators(aligned_alloc, counting_calloc, counting_free);
+    spsc_ring_test_set_lock_free_overrides(1, 0);
+    assert_null(spsc_ring_init(16));
+    assert_int_equal(0, (int)calloc_call_count);
+    assert_int_equal(1, (int)free_call_count);
+}
+
 static int reset_allocator_hooks(void** state)
 {
     (void)state;
     spsc_ring_test_reset_allocators();
     free_call_count = 0U;
+    calloc_call_count = 0U;
     return 0;
 }
 #endif
@@ -274,6 +302,8 @@ int main(void)
 #ifdef SPSC_RING_TESTING
         cmocka_unit_test_setup_teardown(test_init_handles_control_allocation_failure, reset_allocator_hooks, reset_allocator_hooks),
         cmocka_unit_test_setup_teardown(test_init_cleans_up_after_buffer_allocation_failure, reset_allocator_hooks, reset_allocator_hooks),
+        cmocka_unit_test_setup_teardown(test_init_rejects_non_lock_free_head, reset_allocator_hooks, reset_allocator_hooks),
+        cmocka_unit_test_setup_teardown(test_init_rejects_non_lock_free_tail, reset_allocator_hooks, reset_allocator_hooks),
 #endif
         cmocka_unit_test(test_push_pop_fifo_order),
         cmocka_unit_test(test_detects_full_ring),

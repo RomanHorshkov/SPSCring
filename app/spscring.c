@@ -16,10 +16,29 @@
 
 #include "spscring.h"
 
+#include <limits.h>    /* ULONG_MAX, ULLONG_MAX */
 #include <stdatomic.h> /* C11 atomic operations and memory ordering */
 #include <stddef.h>    /* size_t, SIZE_MAX */
 #include <stdint.h>    /* uint64_t and other fixed-width integer types */
 #include <stdlib.h>    /* malloc, calloc, free */
+
+#if defined(SPSC_REQUIRE_ALWAYS_LOCK_FREE)
+#    if defined(__clang__) || defined(__GNUC__)
+#        if UINT64_MAX == ULONG_MAX
+#            if ATOMIC_LONG_LOCK_FREE != 2
+#                error "SPSCring requires always-lock-free unsigned long atomics"
+#            endif
+#        elif UINT64_MAX == ULLONG_MAX
+#            if ATOMIC_LLONG_LOCK_FREE != 2
+#                error "SPSCring requires always-lock-free unsigned long long atomics"
+#            endif
+#        else
+#            error "SPSCring does not recognize the uint64_t base type on this target"
+#        endif
+#    else
+#        error "SPSC_REQUIRE_ALWAYS_LOCK_FREE requires GCC or Clang"
+#    endif
+#endif
 
 /* Test builds replace the two allocation calls through this deliberately
  * private seam. Production builds call the C library directly and export no
@@ -30,6 +49,8 @@
 static spsc_ring_test_aligned_alloc_fn spsc_ring_aligned_allocator = aligned_alloc;
 static spsc_ring_test_calloc_fn        spsc_ring_calloc_allocator  = calloc;
 static spsc_ring_test_free_fn          spsc_ring_free_allocator    = free;
+static int                             spsc_ring_head_lock_free_override = -1;
+static int                             spsc_ring_tail_lock_free_override = -1;
 
 void spsc_ring_test_set_allocators(spsc_ring_test_aligned_alloc_fn aligned_allocator,
                                    spsc_ring_test_calloc_fn        calloc_allocator,
@@ -45,6 +66,14 @@ void spsc_ring_test_reset_allocators(void)
     spsc_ring_aligned_allocator = aligned_alloc;
     spsc_ring_calloc_allocator  = calloc;
     spsc_ring_free_allocator    = free;
+    spsc_ring_head_lock_free_override = -1;
+    spsc_ring_tail_lock_free_override = -1;
+}
+
+void spsc_ring_test_set_lock_free_overrides(int head_is_lock_free, int tail_is_lock_free)
+{
+    spsc_ring_head_lock_free_override = head_is_lock_free;
+    spsc_ring_tail_lock_free_override = tail_is_lock_free;
 }
 
 static void* spsc_ring_allocate_control(size_t alignment, size_t size)
@@ -97,6 +126,27 @@ struct spsc_ring
 _Static_assert(offsetof(struct spsc_ring, tail) - offsetof(struct spsc_ring, head) >= SPSC_CACHELINE,
                "spsc_ring head and tail must be on separate cache lines");
 
+static int spsc_ring_atomics_are_lock_free(spsc_ring_t* ring)
+{
+#ifdef SPSC_RING_TESTING
+    int head_is_lock_free = spsc_ring_head_lock_free_override;
+    int tail_is_lock_free = spsc_ring_tail_lock_free_override;
+
+    if(head_is_lock_free < 0)
+    {
+        head_is_lock_free = atomic_is_lock_free(&ring->head);
+    }
+    if(tail_is_lock_free < 0)
+    {
+        tail_is_lock_free = atomic_is_lock_free(&ring->tail);
+    }
+    return (head_is_lock_free != 0) && (tail_is_lock_free != 0);
+#else
+    return (atomic_is_lock_free(&ring->head) != 0) && (atomic_is_lock_free(&ring->tail) != 0);
+#endif
+}
+
+
 spsc_ring_t* spsc_ring_init(uint64_t capacity)
 {
     /* Check input, not 0 and must be power of 2 */
@@ -111,19 +161,22 @@ spsc_ring_t* spsc_ring_init(uint64_t capacity)
      * zero, so every field is set explicitly below. */
     spsc_ring_t* ring = spsc_ring_allocate_control(_Alignof(spsc_ring_t), sizeof(spsc_ring_t));
     if(!ring) return NULL;
-    /*
-     * Store the capacity and calculate the bitmask which allows to efficiently wrap indices:
-     * Instead of: index % size (expensive division) use: index & mask (fast bitwise AND)
-     * This only works when size is a power of 2
-     */
+
+    /* Store the capacity and calculate the indexing mask. */
     ring->size = capacity;
     ring->mask = capacity - 1;
 
-    /*
-     * Allocate the circular buffer array
-     * calloc() initializes all elements to 0, which is helpful for debugging
-     * malloc() can be used for slightly better performance in production
-     */
+    /* Initialize the actual atomic objects before probing their implementation. */
+    atomic_init(&ring->head, UINT64_C(0));
+    atomic_init(&ring->tail, UINT64_C(0));
+    if(!spsc_ring_atomics_are_lock_free(ring))
+    {
+        spsc_ring_release(ring);
+        return NULL;
+    }
+
+    /* calloc() initialization is useful for debugging; queue correctness does
+     * not depend on the contents of unoccupied slots. */
     ring->buf = spsc_ring_allocate_buffer(capacity, sizeof(*ring->buf));
     if(!ring->buf)
     {
@@ -131,17 +184,6 @@ spsc_ring_t* spsc_ring_init(uint64_t capacity)
         return NULL;
     }
 
-    /*
-     * Initialize atomic head and tail pointers to 0
-     * atomic_store() ensures these writes are visible to other threads
-     * with proper memory ordering (default sequential consistency)
-     *
-     * Initial state: head = tail = 0 (empty buffer)
-     */
-    atomic_store(&ring->head, 0);
-    atomic_store(&ring->tail, 0);
-
-    /* Return pointer to the ring instance */
     return ring;
 }
 

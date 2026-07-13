@@ -47,7 +47,7 @@ source "${PROFILE_FILE}"
 # --- project description ------------------------------------------------------
 LIB_BASENAME="spscring"
 LIB_SOURCES=(app/spscring.c)
-LIB_CPPFLAGS=(-Iapp)
+LIB_CPPFLAGS=(-Iapp -DSPSC_REQUIRE_ALWAYS_LOCK_FREE)
 # spscring is C11-atomics + libc only; with -Wl,-z,defs any additional needed
 # library would have to be named here explicitly.
 LIB_LDLIBS=()

@@ -41,6 +41,20 @@ Key design decisions:
 - Stored values are `int` and are independent of index width.
 - Arithmetic cost is negligible compared to atomic loads/stores; the critical path is memory ordering and cacheline traffic.
 
+## Lock-free target support
+
+SPSCring does not silently use lock-backed atomic operations. At initialization,
+it checks the two actual `_Atomic uint64_t` counters with C11
+`atomic_is_lock_free`; if either check fails, `spsc_ring_init` returns `NULL`
+before allocating the data buffer. This is the definitive portable check.
+
+The project build and integration-test scripts additionally define
+`SPSC_REQUIRE_ALWAYS_LOCK_FREE`. On GCC and Clang, the compiler target's
+same-width atomic lock-free macro is checked during compilation, so unsupported
+targets fail the build early. This is a compiler/CPU-target property, not an
+OS macro. Standalone consumers that do not define this macro still receive the
+runtime refusal rather than a lock-based ring.
+
 ## Index width, wrap, and uptime
 
 Wrap means the counter goes back to 0 after hitting its maximum value. Uptime is how long the process runs without restarting.
