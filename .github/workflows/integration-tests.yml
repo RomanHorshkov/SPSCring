@@ -1,4 +1,4 @@
-name: CI
+name: ITs
 
 on:
   push:
@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build libraries
+  integration-tests:
+    name: Threaded integration tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          sudo apt-get install -y build-essential libcmocka-dev
 
-      - name: Build libraries
+      - name: Build and run ITs
         run: |
-          ./utils/build_libs.sh
+          ./utils/make_ITs.sh

@@ -1,4 +1,4 @@
-name: tests
+name: Coverage gate (100% UTs)
 
 on:
   push:
@@ -13,27 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  release-tests:
-    name: Release tests (UTs + ITs)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libcmocka-dev
-
-      - name: Build and run release UTs
-        run: |
-          ./utils/make_UTs_release.sh
-
-      - name: Build and run ITs
-        run: |
-          ./utils/make_ITs.sh
-
-  coverage-tests:
-    name: Coverage gate (100% UTs)
+  coverage:
+    name: UT coverage: 100% line and branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
