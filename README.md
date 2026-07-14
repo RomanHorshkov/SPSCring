@@ -1,12 +1,6 @@
 # SPSCring
 
-[![CI](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml)
-[![UTs](https://github.com/RomanHorshkov/SPSCring/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/unit-tests.yml)
-[![ITs](https://github.com/RomanHorshkov/SPSCring/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/integration-tests.yml)
-[![Sanitizers](https://github.com/RomanHorshkov/SPSCring/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/sanitizers.yml)
-[![Coverage 100%](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml/badge.svg?branch=master&label=coverage%20100%25)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml)
-[![Package](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml)
-[![License](https://img.shields.io/github/license/RomanHorshkov/SPSCring)](LICENSE)
+[![CI](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/ci.yml) [![UTs](https://github.com/RomanHorshkov/SPSCring/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/unit-tests.yml) [![ITs](https://github.com/RomanHorshkov/SPSCring/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/integration-tests.yml) [![Sanitizers](https://github.com/RomanHorshkov/SPSCring/actions/workflows/sanitizers.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/sanitizers.yml) [![Coverage 100%](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml/badge.svg?branch=master&label=coverage%20100%25)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/tests.yml) [![Package](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/package.yml) [![License](https://img.shields.io/github/license/RomanHorshkov/SPSCring)](LICENSE)
 
 Single Producer Single Consumer (SPSC) ring buffer implemented in C11 with lock-free semantics for exactly one producer and one consumer thread. The data type is `int` and is intended for use with socket file descriptors.
 
@@ -44,17 +38,9 @@ Key design decisions:
 
 ## Lock-free target support
 
-SPSCring does not silently use lock-backed atomic operations. At initialization,
-it checks the two actual `_Atomic uint64_t` counters with C11
-`atomic_is_lock_free`; if either check fails, `spsc_ring_init` returns `NULL`
-before allocating the data buffer. This is the definitive portable check.
+SPSCring does not silently use lock-backed atomic operations. At initialization, it checks the two actual `_Atomic uint64_t` counters with C11 `atomic_is_lock_free`; if either check fails, `spsc_ring_init` returns `NULL` before allocating the data buffer. This is the definitive portable check.
 
-The project build and integration-test scripts additionally define
-`SPSC_REQUIRE_ALWAYS_LOCK_FREE`. On GCC and Clang, the compiler target's
-same-width atomic lock-free macro is checked during compilation, so unsupported
-targets fail the build early. This is a compiler/CPU-target property, not an
-OS macro. Standalone consumers that do not define this macro still receive the
-runtime refusal rather than a lock-based ring.
+The project build and integration-test scripts additionally define `SPSC_REQUIRE_ALWAYS_LOCK_FREE`. On GCC and Clang, the compiler target's same-width atomic lock-free macro is checked during compilation, so unsupported targets fail the build early. This is a compiler/CPU-target property, not an OS macro. Standalone consumers that do not define this macro still receive the runtime refusal rather than a lock-based ring.
 
 ## Index width, wrap, and uptime
 
@@ -79,15 +65,12 @@ Examples:
 
 Builds are driven by scripts under `utils/`:
 
-- `utils/build_libs.sh [profile …]` builds the static and shared libraries per
-  profile into `build/<profile>/` (release gated by `check_hardening.sh`).
+- `utils/build_libs.sh [profile …]` builds the static and shared libraries per profile into `build/<profile>/` (release gated by `check_hardening.sh`).
 - `utils/make_UTs_cov.sh` builds and runs unit tests with coverage output.
 - `utils/make_UTs_release.sh` builds and runs unit tests against release libraries.
 - `utils/make_ITs.sh` builds and runs integration tests.
-- `utils/make_sanitizer_tests.sh` builds and runs both suites with ASan, UBSan,
-  and LSan.
-- `utils/build_deb.sh` builds the release deb + `SHA256SUMS` (VERSION-validated,
-  hardening-checked); `utils/run_pipeline.sh` runs the whole board.
+- `utils/make_sanitizer_tests.sh` builds and runs both suites with ASan, UBSan, and LSan.
+- `utils/build_deb.sh` builds the release deb + `SHA256SUMS` (VERSION-validated, hardening-checked); `utils/run_pipeline.sh` runs the whole board.
 
 ## Dependencies
 
@@ -124,23 +107,15 @@ Integration tests live under `tests/ITs` and can be run with:
 ./utils/make_ITs.sh
 ```
 
-Memory and undefined-behavior checks run both suites with AddressSanitizer,
-UndefinedBehaviorSanitizer, and LeakSanitizer:
+Memory and undefined-behavior checks run both suites with AddressSanitizer, UndefinedBehaviorSanitizer, and LeakSanitizer:
 
 ```bash
 ./utils/make_sanitizer_tests.sh
 ```
 
-The **Sanitizers** workflow runs this command on every push and pull request.
-ThreadSanitizer remains a separate opt-in diagnostic because it cannot be
-combined with ASan and is not reliable enough on every host for a required
-pipeline gate.
+The **Sanitizers** workflow runs this command on every push and pull request. ThreadSanitizer remains a separate opt-in diagnostic because it cannot be combined with ASan and is not reliable enough on every host for a required pipeline gate.
 
-Coverage artifacts are written to `tests/results/UTs/`.
-The coverage workflow runs on every push and pull request. It uses the same
-`gcovr` output generated by `make_UTs_cov.sh` and fails unless both line and
-branch coverage are 100%; therefore a passing **Coverage 100%** badge reflects
-the enforced pipeline result, rather than a separately maintained value.
+Coverage artifacts are written to `tests/results/UTs/`. The coverage workflow runs on every push and pull request. It uses the same `gcovr` output generated by `make_UTs_cov.sh` and fails unless both line and branch coverage are 100%; therefore a passing **Coverage 100%** badge reflects the enforced pipeline result, rather than a separately maintained value.
 
 ## License
 
