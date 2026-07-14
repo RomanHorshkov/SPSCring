@@ -87,6 +87,27 @@ report_debs() {
     return 0
 }
 
+# Print per-file line/branch/function coverage from gcovr's coverage-summary.json
+# (produced by make_UTs_cov.sh). Missing file is reported, not silently skipped.
+report_coverage() {
+    printf '\n%s== Coverage ==%s\n' "${c_bold}" "${c_rst}"
+    local path="${ROOT_DIR}/tests/results/UTs/coverage-summary.json"
+    if [[ -f "${path}" ]]; then
+        python3 - "${path}" <<'PY'
+import json, sys
+with open(sys.argv[1]) as fh:
+    d = json.load(fh)
+print(f"  unit-tests-coverage line {d['line_percent']:5.1f}% ({d['line_covered']}/{d['line_total']})"
+      f"   branch {d['branch_percent']:5.1f}% ({d['branch_covered']}/{d['branch_total']})"
+      f"   func {d['function_percent']:5.1f}% ({d['function_covered']}/{d['function_total']})")
+for f in d["files"]:
+    print(f"    {f['filename']:<20} line {f['line_percent']:5.1f}%   branch {f['branch_percent']:5.1f}%   func {f['function_percent']:5.1f}%")
+PY
+    else
+        printf '  no coverage-summary.json found (unit-tests-coverage did not complete)\n'
+    fi
+}
+
 printf '%s\u2554\u2550\u2550 %s pipeline \u2550\u2550\u2550\u2550%s\n' "${c_bold}" "${PKG_LABEL}" "${c_rst}"
 
 stage "build"          bash "${SCRIPT_DIR}/build_libs.sh"
@@ -95,6 +116,8 @@ stage "unit-tests-coverage" bash "${SCRIPT_DIR}/make_UTs_cov.sh"
 stage "integration-tests"  bash "${SCRIPT_DIR}/make_ITs.sh"
 stage "sanitizer-tests"    bash "${SCRIPT_DIR}/make_sanitizer_tests.sh"
 stage "package"        bash "${SCRIPT_DIR}/build_deb.sh"
+
+report_coverage
 
 report_debs || FAILED=1
 

@@ -56,7 +56,7 @@ Section: libs
 Priority: optional
 Architecture: $ARCH
 Maintainer: Roman Horshkov <https://github.com/RomanHorshkov>
-Description: spscring personal library installed under /usr/local
+Description: Single-producer single-consumer lock-free ring buffer library
 EOF
 
 # post installation script
