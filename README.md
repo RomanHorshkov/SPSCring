@@ -123,26 +123,40 @@ MIT, see `LICENSE`.
 
 ## Release process
 
-Release flow is manual and tag-driven.
+Releases are tag-driven:
 
-1. Ensure `VERSION` matches the intended release tag (for example, `1.0.0`).
-2. Commit the version bump if needed.
-3. Create and push a Git tag (prefix `v` is required by the package workflow):
+1. Run the complete local validation pipeline from a clean release candidate:
 
-```bash
-git tag v1.0.0
-git push origin v1.0.0
+   ```sh
+   ./utils/run_pipeline.sh
+   ```
+
+2. Update `VERSION` if necessary, commit the release candidate, merge it into
+   `master`, and update local `master`.
+3. Create and push an annotated tag that exactly matches `VERSION`. For
+   `VERSION=2.0.0`:
+
+   ```sh
+   git tag -a v2.0.0 -m "SPSCring v2.0.0"
+   git push origin master
+   git push origin v2.0.0
+   ```
+
+The [`package` workflow](./.github/workflows/package.yml) rejects a tag that
+does not equal `v${VERSION}`. It builds the release library, strips the staged
+shared object, verifies that exact object with `utils/check_hardening.sh`, and
+publishes both `spscring_<version>_<architecture>.deb` and `SHA256SUMS`.
+
+To build and verify the package locally without publishing a release:
+
+```sh
+./utils/build_deb.sh
+cd build/debs
+sha256sum --check SHA256SUMS
 ```
 
-This triggers the `package` workflow, which builds and uploads the `.deb` artifact.
-
-To trigger packaging without a tag:
-
-```bash
-gh workflow run package
-```
-
-(`gh` CLI required, or use the GitHub Actions UI to manually run the workflow.)
+The workflow can also be run without a tag from the GitHub Actions interface
+or with `gh workflow run package`.
 
 ## Build profiles & hardening
 
