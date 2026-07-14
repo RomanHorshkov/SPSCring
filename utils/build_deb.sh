@@ -10,6 +10,7 @@ set -euo pipefail
 
 ROOT_DIR="${ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PKG_NAME="spscring"
+STRIP="${STRIP:-strip}"
 
 die() { printf '%s: %s\n' "${BASH_SOURCE[0]}" "$1" >&2; exit 1; }
 
@@ -37,13 +38,14 @@ mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/local/lib" "$STAGE/usr/local/include"
 install -m 0644 app/spscring.h "$STAGE/usr/local/include/spscring.h"
 
 install -m 0755 "build/release/libspscring.so.$VER" "$STAGE/usr/local/lib/libspscring.so.$VER"
+"$STRIP" --strip-unneeded "$STAGE/usr/local/lib/libspscring.so.$VER"
 ln -sf "libspscring.so.$VER" "$STAGE/usr/local/lib/libspscring.so.$MAJOR"
 ln -sf "libspscring.so.$VER" "$STAGE/usr/local/lib/libspscring.so"
 
 install -m 0644 build/release/libspscring.a "$STAGE/usr/local/lib/libspscring.a"
 
-# Gate the staged shared library: the deb payload must carry the hardening the
-# release profile promises. A hard failure aborts the package build.
+# Gate the staged, stripped shared library: the exact deb payload must carry
+# the hardening the release profile promises. A hard failure aborts the build.
 "${ROOT_DIR}/utils/check_hardening.sh" "$STAGE/usr/local/lib/libspscring.so.$VER"
 
 # Control file
