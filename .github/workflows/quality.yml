@@ -11,6 +11,13 @@ name: Quality
 
 on:
   push:
+    # Tag pushes are release cuts: release.yml's quality-gate job already invokes THIS
+    # file via workflow_call for that exact ref. Without this exclusion a tag push fires
+    # Quality twice — once directly, once nested inside Release — and while they no
+    # longer deadlock (see the concurrency group below), the direct one is pure waste:
+    # it just gets cancelled by the nested one (or vice versa) every single release.
+    tags-ignore:
+      - "v*.*.*"
   pull_request:
   workflow_dispatch:
   workflow_call:
