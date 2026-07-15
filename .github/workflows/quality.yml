@@ -111,7 +111,11 @@ jobs:
             echo "no .deb found under build/debs/" >&2
             exit 1
           fi
-          sudo apt-get install -y "${DEB_FILE}"
+          # apt-get only treats an argument as a local file path if it starts with ./ or /;
+          # a bare relative path like "build/debs/foo.deb" (even though it contains slashes)
+          # is parsed as a REPOSITORY PACKAGE NAME instead and fails with a confusing
+          # "Unable to locate package build/debs" error.
+          sudo apt-get install -y "./${DEB_FILE}"
       - name: Smoke test the installed package
         run: ./utils/smoke_test_package.sh
       - name: Upload package artifacts
