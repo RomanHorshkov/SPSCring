@@ -1,0 +1,118 @@
+name: Quality
+
+# Connected graph, not six independent workflows racing each other on every push:
+#
+#   build
+#     +-- unit-tests-coverage                       (leaf: release UTs + 100% UT coverage gate)
+#     +-- integration-tests -> sanitizers -> package-smoke
+#
+# Also invocable as a reusable workflow (workflow_call) so release.yml can require it to pass
+# before cutting a release, instead of re-implementing the same gate.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (all profiles)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+      - name: Build libraries
+        run: ./utils/build_libs.sh
+
+  unit-tests-coverage:
+    name: "Release UTs + 100% UT coverage gate"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libcmocka-dev gcovr
+      - name: Build and run release UTs
+        run: ./utils/make_UTs_release.sh
+      - name: Build and run UTs with coverage
+        run: ./utils/make_UTs_cov.sh
+      - name: Upload coverage artifacts (HTML/XML/JSON)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: uts-coverage
+          path: tests/results/UTs
+
+  integration-tests:
+    name: Threaded integration tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcmocka-dev
+      - name: Build and run ITs
+        run: ./utils/make_ITs.sh
+
+  sanitizers:
+    name: ASan, UBSan, LSan (UTs + ITs)
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libcmocka-dev
+      - name: Build and run sanitized UTs and ITs
+        run: ./utils/make_sanitizer_tests.sh
+
+  package-smoke:
+    name: Package build + install + smoke test
+    needs: sanitizers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config fakeroot
+      - name: Build .deb
+        run: ./utils/build_deb.sh
+      - name: Install the built .deb
+        run: sudo apt-get install -y "$(ls build/debs/*.deb | head -1)"
+      - name: Smoke test the installed package
+        run: ./utils/smoke_test_package.sh
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: deb-package
+          path: |
+            build/debs/*.deb
+            build/debs/SHA256SUMS
+          if-no-files-found: error
