@@ -105,7 +105,13 @@ jobs:
       - name: Build .deb
         run: ./utils/build_deb.sh
       - name: Install the built .deb
-        run: sudo apt-get install -y "$(ls build/debs/*.deb | head -1)"
+        run: |
+          DEB_FILE="$(find build/debs -maxdepth 1 -name '*.deb' -print -quit)"
+          if [[ -z "${DEB_FILE}" ]]; then
+            echo "no .deb found under build/debs/" >&2
+            exit 1
+          fi
+          sudo apt-get install -y "${DEB_FILE}"
       - name: Smoke test the installed package
         run: ./utils/smoke_test_package.sh
       - name: Upload package artifacts
