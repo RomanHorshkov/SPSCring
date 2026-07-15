@@ -19,7 +19,17 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # NOT `github.workflow` here: inside a workflow_call invocation (release.yml's
+  # quality-gate job calls this file), `github.workflow` resolves to the CALLER's
+  # name ("Release"), not this file's own name. Release also groups on
+  # `${{ github.workflow }}-${{ github.ref }}`, so both end up computing the
+  # IDENTICAL group ("Release-refs/tags/vX.Y.Z") for the same tag push — the
+  # parent run occupies that group waiting on quality-gate, and quality-gate can
+  # never start because its own parent already holds the group it needs. GitHub
+  # detects and cancels this as a deadlock (confirmed live in uuid7, fixed there
+  # in commit 43ff27d). A hardcoded literal prefix keeps this file's group
+  # stable and distinct regardless of who calls it.
+  group: quality-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
