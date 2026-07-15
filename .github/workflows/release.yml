@@ -1,25 +1,37 @@
-name: package
+name: Release
+
+# Full reusable Quality gate must pass before anything is published. Fires on a v* tag push or
+# a published GitHub Release; validates the tag matches VERSION, builds the hardened package,
+# generates checksums + a build-provenance attestation, then uploads to the GitHub Release.
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "v*"
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false # never cancel a release mid-flight
 
 jobs:
-  deb-package:
-    name: Build .deb package
+  quality-gate:
+    name: Quality gate
+    uses: ./.github/workflows/quality.yml
+
+  publish:
+    name: Build, sign, and publish
+    needs: quality-gate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    permissions:
+      contents: write       # upload release assets
+      id-token: write       # OIDC for build provenance attestation
+      attestations: write   # attach the attestation to this repo
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -27,8 +39,7 @@ jobs:
 
       - name: Read version
         id: version
-        run: |
-          echo "value=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+        run: echo "value=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
 
       - name: Verify tag matches VERSION
         if: startsWith(github.ref, 'refs/tags/')
@@ -46,36 +57,16 @@ jobs:
           sudo apt-get install -y build-essential pkg-config fakeroot
 
       - name: Build .deb
-        run: |
-          ./utils/build_deb.sh
+        run: ./utils/build_deb.sh
 
-      - name: Upload package artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - name: Generate build provenance attestation
+        uses: actions/attest-build-provenance@1c608d11d69870c2092266b3f9a6f3abbf17002c # v2.2.3
         with:
-          name: deb-package
-          path: |
-            build/debs/*.deb
-            build/debs/SHA256SUMS
-          if-no-files-found: error
-
-  release:
-    name: Upload .deb to GitHub Release
-    needs: deb-package
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
-    runs-on: ubuntu-latest
-    permissions:
-      # This is the only job that receives a token able to modify a release.
-      contents: write
-    steps:
-      - name: Download packaged artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: deb-package
-          path: release-assets
+          subject-path: build/debs/*.deb
 
       - name: Upload package to GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: |
-            release-assets/*.deb
-            release-assets/SHA256SUMS
+            build/debs/*.deb
+            build/debs/SHA256SUMS

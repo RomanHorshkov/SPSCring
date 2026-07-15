@@ -18,7 +18,12 @@ mkdir -p "$BUILD_DIR"
 "${ROOT_DIR}/utils/build_libs.sh" release
 
 # Build unit test objects (release flags).
-UT_CFLAGS=(-std=c11 -O2 -DNDEBUG -D_GNU_SOURCE -Iapp -Itests/UTs)
+# Deliberately NOT -DNDEBUG: unit_tests.c's checks are plain assert() calls, so NDEBUG would
+# silently turn every one of them into a no-op — the binary would print "ALL UNIT TESTS
+# PASSED" regardless of whether anything actually passed. The LIBRARY under test is still the
+# release-profile build (via build_libs.sh above); only the test harness itself must never
+# disable its own assertions.
+UT_CFLAGS=(-std=c11 -O2 -D_GNU_SOURCE -Iapp -Itests/UTs)
 for src in tests/UTs/*.c; do
   out="${BUILD_DIR}/$(basename "${src%.c}").o"
   gcc "${UT_CFLAGS[@]}" -c "$src" -o "$out"
