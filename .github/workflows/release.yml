@@ -1,15 +1,22 @@
 name: Release
 
-# Full reusable Quality gate must pass before anything is published. Fires on a v* tag push or
-# a published GitHub Release; validates the tag matches VERSION, builds the hardened package,
-# generates checksums + a build-provenance attestation, then uploads to the GitHub Release.
+# Full reusable Quality gate must pass before anything is published. Fires on a v* tag push;
+# validates the tag matches VERSION, builds the hardened package, generates checksums, then
+# creates the GitHub Release directly from this job (no separate `release: published` trigger —
+# a second trigger path here would let a tag push and a manually-drafted release race each other
+# into the same job with two different `github.ref` shapes; one proven trigger is enough — mirrors
+# uuid7/MPSCring/EMlog's own release.yml, all single-trigger).
+#
+# No build-provenance attestation here: actions/attest-build-provenance is unavailable for
+# user-owned private repositories (same GitHub platform wall as CodeQL would hit in security.yml),
+# and it hard-fails the job rather than degrading gracefully — a failed attestation step would have
+# silently blocked every later step in this job, including the one that actually creates the
+# release. Re-add it if/when the repo goes public or moves to an org with GHAS.
 
 on:
   push:
     tags:
       - "v*"
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -29,9 +36,7 @@ jobs:
     needs: quality-gate
     runs-on: ubuntu-latest
     permissions:
-      contents: write       # upload release assets
-      id-token: write       # OIDC for build provenance attestation
-      attestations: write   # attach the attestation to this repo
+      contents: write # create the GitHub release
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -59,14 +64,23 @@ jobs:
       - name: Build .deb
         run: ./utils/build_deb.sh
 
-      - name: Generate build provenance attestation
-        uses: actions/attest-build-provenance@1c608d11d69870c2092266b3f9a6f3abbf17002c # v2.2.3
+      - name: Upload workflow artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          subject-path: build/debs/*.deb
-
-      - name: Upload package to GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
-        with:
-          files: |
+          name: release-assets
+          if-no-files-found: error
+          path: |
             build/debs/*.deb
             build/debs/SHA256SUMS
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            build/debs/*.deb \
+            build/debs/SHA256SUMS \
+            --generate-notes \
+            --title "SPSCring ${GITHUB_REF_NAME}"
