@@ -77,6 +77,13 @@ exit 0
 EOF
 chmod 0755 "$STAGE/DEBIAN/postrm"
 
+# Ship the DEP-5 copyright file (first-party terms + every third-party notice)
+# at /usr/share/doc/<pkg>/copyright (Debian Policy 12.5). A missing file is a
+# build error: a binary must never leave without its notices.
+COPYRIGHT_SRC="${ROOT_DIR}/debian/copyright"
+[[ -f "${COPYRIGHT_SRC}" ]] || die "missing ${COPYRIGHT_SRC} — third-party notices must ship in the deb"
+install -d -m 0755 "${STAGE}/usr/share" "${STAGE}/usr/share/doc" "${STAGE}/usr/share/doc/${PKG_NAME}"
+install -m 0644 "${COPYRIGHT_SRC}" "${STAGE}/usr/share/doc/${PKG_NAME}/copyright"
 # Build .deb
 DEB="${PKG_NAME}_${VER}_${ARCH}.deb"
 fakeroot dpkg-deb --build "$STAGE" "$DEB"
