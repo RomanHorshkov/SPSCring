@@ -882,6 +882,13 @@ CFLAGS_INSTRUMENT_COVERAGE=(
   #   This is the flag you will usually want to see in the build script when a
   #   coverage-specific variant is being produced.
   --coverage
+  # -fprofile-update=atomic
+  #   Update the gcov counters atomically. Any code that runs on several threads
+  #   WITHOUT a lock (EMlog's default emit path, ring buffers, the uuid7 CAS loop)
+  #   otherwise races on the counters and gcov emits negative hit counts that
+  #   gcovr refuses (GCC bug 68080). Slightly slower instrumented binaries; the
+  #   counts become trustworthy.
+  -fprofile-update=atomic
 )
 
 LDFLAGS_INSTRUMENT_COVERAGE=(
