@@ -1,0 +1,26 @@
+# SPSCring — which functions libspscring.so exposes to the outside
+#
+# This file is given to the linker when libspscring.so is built
+# (-Wl,--version-script). It is a plain allowlist:
+#
+#   global:  names a consumer program may call or link against
+#   local:   everything else — still inside the library, still used
+#            internally, but invisible from outside
+#
+# Without this file the linker exports EVERY non-static function in every .c
+# file, so internal helpers become part of the library's public interface by
+# accident. With it, the public interface is exactly the list below.
+#
+# It only affects the .so. The .a archive is a bag of object files with no
+# notion of "exported", so it is unchanged.
+#
+# Rule: a function is public when it is declared in the public header AND
+# matches a line under global:. Forgetting the second half is caught at link
+# time (the consumer's link fails with "undefined reference"), never at run
+# time.
+{
+  global:
+    spsc_ring_*;
+  local:
+    *;
+};

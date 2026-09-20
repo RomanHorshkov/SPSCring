@@ -122,7 +122,10 @@ build_profile() {
             -c "${source_path}" -o "${pic_object}"
 
         printf '  compiling static object: %s\n' "${static_object}"
-        gcc "${cppflags_ref[@]}" "${LIB_CPPFLAGS[@]}" "${cflags_ref[@]}" \
+        # -fPIC on the ARCHIVE object too: the .a must link into PIE executables and into
+        # consumers' shared objects on any toolchain, not only on one built with
+        # --enable-default-pie (Debian/Ubuntu gcc). Same code as the .so object.
+        gcc "${cppflags_ref[@]}" "${LIB_CPPFLAGS[@]}" "${cflags_ref[@]}" -fPIC \
             -c "${source_path}" -o "${static_object}"
 
         pic_objects+=("${pic_object}")
@@ -135,6 +138,7 @@ build_profile() {
     printf '  linking shared library:  %s\n' "${shared_path}"
     gcc "${LDFLAGS_SHARED[@]}" "${extra_ldflags[@]}" \
         -Wl,-soname,"${shared_soname}" \
+        -Wl,--version-script,"${ROOT_DIR}/utils/spscring.map" \
         -o "${shared_path}" \
         "${pic_objects[@]}" \
         ${LIB_LDLIBS[@]+"${LIB_LDLIBS[@]}"}
