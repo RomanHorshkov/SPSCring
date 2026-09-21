@@ -52,10 +52,10 @@ static uint64_t _now_ns(void)
 /* @return 1 if the bit was ALREADY set (duplicate), 0 if this is the first time. */
 static int _bit_test_and_set(uint64_t index)
 {
-    const uint64_t byte    = index / 8u;
-    const uint8_t  mask    = (uint8_t)(1u << (index % 8u));
-    const int      was_set = (g_seen[byte] & mask) != 0;
-    g_seen[byte] |= mask;
+    const uint64_t byte     = index / 8u;
+    const uint8_t  mask     = (uint8_t)(1u << (index % 8u));
+    const int      was_set  = (g_seen[byte] & mask) != 0;
+    g_seen[byte]           |= mask;
     return was_set;
 }
 

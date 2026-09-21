@@ -1,0 +1,89 @@
+---
+# Base style and indentation
+BasedOnStyle: Google          # Use Google as the baseline for style
+IndentWidth: 4                # Indent by 4 spaces
+TabWidth: 4                   # Set tab width to 4 spaces, even if tabs not used
+UseTab: Never                 # Always use spaces, never tabs
+
+# Code formatting limits
+ColumnLimit: 140              # Maximum line length
+SortIncludes: true            # Alphabetize #include directives
+IncludeBlocks: Preserve       # Preserve relative order of blocks of includes
+
+# Bracing and indentation style
+BreakBeforeBraces: Allman     # Use Allman style braces
+IndentPPDirectives: AfterHash # Preprocessor directives aligned after #
+IndentExternBlock: NoIndent   # Do not indent contents of extern "C" blocks
+
+# Spacing rules — detailed per-case overrides
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements: false
+  AfterFunctionDefinitionName: false
+  AfterFunctionDeclarationName: false
+  AfterIfMacros: false
+  AfterOverloadedOperator: false
+  BeforeNonEmptyParentheses: false
+  # AfterForeachMacros: false  # Uncomment if using custom foreach macros & supported
+
+# Enforce multi-line for sets typically squashed to one line
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+
+# Alignment and comments
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2            # Align comments over up to 2 blank lines
+SpacesBeforeTrailingComments: 2 # Require 2 spaces before end-of-line comment
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossComments: true         # Align through comments
+  AlignCompound: true          # Include compound assignments
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AlignCompound: true
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+
+# Comment handling
+ReflowComments: true           # Reflow block comments to the configured column limit
+CommentPragmas: '^(NOLINT|NOCFMT)'  # Don't reflow comments matching these pragmas
+
+# Extra: Balance readability with control and standards compliance
+PointerAlignment: Left         # Force pointer * alignment to type
+DerivePointerAlignment: false  # Don’t infer pointer style from existing code
+
+SpacesInParentheses: false     # No extra spaces inside parentheses
+SpacesInSquareBrackets: false  # No extra spaces inside brackets
+SpaceInEmptyParentheses: false # No spaces in empty parens: foo()
+
+# Prevent accidental style drift
+FixNamespaceComments: true     # Always check/fix namespace end comments
+NamespaceIndentation: None     # Don’t indent within namespaces
+EmptyLineBeforeAccessModifier: LogicalBlock # Add blank line before public/protected/private
+
+# Keep comments and #includes visually crisp
+# InsertTrailingCommas: Wrapped  # Add trailing commas in multi-line containers
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+# Enforce deterministic ordering for includes
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+SortUsingDeclarations: true
+
+# Advanced: Code readability and consistency settings
+IndentCaseLabels: true        # Indent 'case' labels in switch
+AllowAllArgumentsOnNextLine: true
+AlignOperands: AlignAfterOperator
+SpacesInAngles: false          # C++ templates: no extra spaces
+BreakBeforeBinaryOperators: None # Place binary ops before line break, not after
+BreakConstructorInitializers: AfterColon # Initializers break after colon
+
+# Modernization: Encourage readable, maintainable code
+Cpp11BracedListStyle: true     # Use modern braced init list style

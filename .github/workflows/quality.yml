@@ -39,6 +39,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  format-check:
+    name: clang-format check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18
+      - name: Every source already canonical
+        run: CLANG_FORMAT=clang-format-18 ./utils/format.sh --check
+
   build:
     name: Build (all profiles)
     runs-on: ubuntu-latest
@@ -164,7 +179,7 @@ jobs:
 
   package-smoke:
     name: Package build + install + smoke test
-    needs: [compiler-portability, unit-tests-coverage, sanitizers, thread-sanitizer]
+    needs: [format-check, compiler-portability, unit-tests-coverage, sanitizers, thread-sanitizer]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

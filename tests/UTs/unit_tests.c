@@ -1,10 +1,12 @@
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stddef.h>
+
+#include <cmocka.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <cmocka.h>
 #include "spscring.h"
 
 #ifdef SPSC_RING_TESTING
@@ -109,7 +111,7 @@ static int reset_allocator_hooks(void** state)
 {
     (void)state;
     spsc_ring_test_reset_allocators();
-    free_call_count = 0U;
+    free_call_count   = 0U;
     calloc_call_count = 0U;
     return 0;
 }

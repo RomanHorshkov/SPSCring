@@ -46,15 +46,14 @@
 #ifdef SPSC_RING_TESTING
 #    include "spscring_test_hooks.h"
 
-static spsc_ring_test_aligned_alloc_fn spsc_ring_aligned_allocator = aligned_alloc;
-static spsc_ring_test_calloc_fn        spsc_ring_calloc_allocator  = calloc;
-static spsc_ring_test_free_fn          spsc_ring_free_allocator    = free;
+static spsc_ring_test_aligned_alloc_fn spsc_ring_aligned_allocator       = aligned_alloc;
+static spsc_ring_test_calloc_fn        spsc_ring_calloc_allocator        = calloc;
+static spsc_ring_test_free_fn          spsc_ring_free_allocator          = free;
 static int                             spsc_ring_head_lock_free_override = -1;
 static int                             spsc_ring_tail_lock_free_override = -1;
 
-void spsc_ring_test_set_allocators(spsc_ring_test_aligned_alloc_fn aligned_allocator,
-                                   spsc_ring_test_calloc_fn        calloc_allocator,
-                                   spsc_ring_test_free_fn          free_allocator)
+void spsc_ring_test_set_allocators(spsc_ring_test_aligned_alloc_fn aligned_allocator, spsc_ring_test_calloc_fn calloc_allocator,
+                                   spsc_ring_test_free_fn free_allocator)
 {
     spsc_ring_aligned_allocator = aligned_allocator;
     spsc_ring_calloc_allocator  = calloc_allocator;
@@ -63,9 +62,9 @@ void spsc_ring_test_set_allocators(spsc_ring_test_aligned_alloc_fn aligned_alloc
 
 void spsc_ring_test_reset_allocators(void)
 {
-    spsc_ring_aligned_allocator = aligned_alloc;
-    spsc_ring_calloc_allocator  = calloc;
-    spsc_ring_free_allocator    = free;
+    spsc_ring_aligned_allocator       = aligned_alloc;
+    spsc_ring_calloc_allocator        = calloc;
+    spsc_ring_free_allocator          = free;
     spsc_ring_head_lock_free_override = -1;
     spsc_ring_tail_lock_free_override = -1;
 }
@@ -92,8 +91,8 @@ static void spsc_ring_release(void* ptr)
 }
 #else
 #    define spsc_ring_allocate_control(alignment, size) aligned_alloc((alignment), (size))
-#    define spsc_ring_allocate_buffer(count, size) calloc((count), (size))
-#    define spsc_ring_release(ptr) free((ptr))
+#    define spsc_ring_allocate_buffer(count, size)      calloc((count), (size))
+#    define spsc_ring_release(ptr)                      free((ptr))
 #endif
 
 /*
@@ -145,7 +144,6 @@ static int spsc_ring_atomics_are_lock_free(spsc_ring_t* ring)
     return (atomic_is_lock_free(&ring->head) != 0) && (atomic_is_lock_free(&ring->tail) != 0);
 #endif
 }
-
 
 spsc_ring_t* spsc_ring_init(uint64_t capacity)
 {

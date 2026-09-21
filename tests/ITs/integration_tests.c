@@ -3,11 +3,13 @@
 #include <sched.h>
 #include <setjmp.h>
 #include <stdarg.h>
-#include <stdatomic.h>
 #include <stddef.h>
-#include <stdint.h>
 
 #include <cmocka.h>
+
+#include <stdatomic.h>
+#include <stdint.h>
+
 #include "spscring.h"
 
 static void test_simple_flow(void** state)
