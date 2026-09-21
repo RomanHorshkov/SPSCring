@@ -264,7 +264,7 @@ int spsc_ring_pop(spsc_ring_t* ring, int* out_fd)
 
 int spsc_ring_is_empty(spsc_ring_t* ring)
 {
-    if(ring == NULL) return 0;
+    if(ring == NULL) return 1;
     /*
      * Load current head position (next read location)
      * Use relaxed ordering because this thread owns the head pointer

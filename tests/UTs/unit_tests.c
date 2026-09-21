@@ -288,7 +288,7 @@ static void test_functions_with_null_ring(void** state)
     assert_null(spsc_ring_init(4611686018427387904));
     assert_int_equal(-1, spsc_ring_push(NULL, 42));
     assert_int_equal(-1, spsc_ring_pop(NULL, NULL));
-    assert_int_equal(0, spsc_ring_is_empty(NULL));
+    assert_int_equal(1, spsc_ring_is_empty(NULL));
     assert_int_equal(0, spsc_ring_is_full(NULL));
     assert_int_equal(0, spsc_ring_capacity(NULL));
     assert_int_equal(0, spsc_ring_size(NULL));
