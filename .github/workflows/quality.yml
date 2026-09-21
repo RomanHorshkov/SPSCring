@@ -12,13 +12,16 @@ name: Quality
 
 on:
   push:
-    # Tag pushes are release cuts: release.yml's quality-gate job already invokes THIS
-    # file via workflow_call for that exact ref. Without this exclusion a tag push fires
-    # Quality twice — once directly, once nested inside Release — and while they no
-    # longer deadlock (see the concurrency group below), the direct one is pure waste:
-    # it just gets cancelled by the nested one (or vice versa) every single release.
-    tags-ignore:
-      - "v*.*.*"
+    # Every branch push and every tag push. A tag push is a release cut and fires Quality
+    # twice — once directly here, once nested inside release.yml's quality-gate via
+    # workflow_call. That is intended: the direct run is the visible per-tag record on this
+    # workflow's own page, the nested one is what gates the release. The two no longer
+    # cancel each other because the concurrency group below is keyed on the CALLING
+    # workflow's name, so they land in different groups.
+    branches:
+      - "**"
+    tags:
+      - "**"
   pull_request:
   workflow_dispatch:
   workflow_call:
@@ -27,17 +30,12 @@ permissions:
   contents: read
 
 concurrency:
-  # NOT `github.workflow` here: inside a workflow_call invocation (release.yml's
-  # quality-gate job calls this file), `github.workflow` resolves to the CALLER's
-  # name ("Release"), not this file's own name. Release also groups on
-  # `${{ github.workflow }}-${{ github.ref }}`, so both end up computing the
-  # IDENTICAL group ("Release-refs/tags/vX.Y.Z") for the same tag push — the
-  # parent run occupies that group waiting on quality-gate, and quality-gate can
-  # never start because its own parent already holds the group it needs. GitHub
-  # detects and cancels this as a deadlock (confirmed live in uuid7, fixed there
-  # in commit 43ff27d). A hardcoded literal prefix keeps this file's group
-  # stable and distinct regardless of who calls it.
-  group: quality-${{ github.ref }}
+  # `github.workflow` is "Quality" for a direct run but resolves to the CALLER's name
+  # ("Release") inside a workflow_call invocation. Keying the group on it keeps a direct
+  # tag-push run and the release-nested run of the SAME ref in separate groups, so neither
+  # cancels the other, and neither collides with Release's own group
+  # ("Release-refs/tags/vX.Y.Z"), which would deadlock the parent against its gate.
+  group: quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

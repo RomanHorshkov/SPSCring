@@ -8,6 +8,8 @@ name: Security
 on:
   push:
     branches: [master, safety_upgrades]
+    tags:
+      - "**"
   pull_request:
   schedule:
     - cron: "0 6 * * 1" # every Monday 06:00 UTC
