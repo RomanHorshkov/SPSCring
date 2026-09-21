@@ -32,21 +32,28 @@ IFS='.' read -r MAJOR MINOR PATCH <<< "$VER"
 # Prepare package staging dir (kept under build/ so it doesn't pollute the repo root).
 STAGE="${ROOT_DIR}/build/pkgroot"
 rm -rf "$STAGE"
-mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/local/lib" "$STAGE/usr/local/include"
+# /usr/local, the same layout every sibling library (uuid7, EMlog, SPSCring) ships with,
+# so one consumer-side rule covers them all.
+LIB_DIR="$STAGE/usr/local/lib"
+INCLUDE_DIR="$STAGE/usr/local/include"
+mkdir -p "$STAGE/DEBIAN" "$LIB_DIR" "$INCLUDE_DIR"
+# Explicit 0755: mkdir -p otherwise inherits the calling shell's umask, which on a permissive
+# umask (e.g. 002) yields group-writable (0775) directories in the shipped package — Debian
+# packages should never depend on umask for the mode of the paths they own.
+chmod 0755 "$STAGE" "$STAGE/DEBIAN" "$STAGE/usr" "$STAGE/usr/local" "$LIB_DIR" "$INCLUDE_DIR"
 
-# Install payload into /usr/local (inside the package)
-install -m 0644 app/spscring.h "$STAGE/usr/local/include/spscring.h"
+install -m 0644 app/spscring.h "$INCLUDE_DIR/spscring.h"
 
-install -m 0755 "build/release/libspscring.so.$VER" "$STAGE/usr/local/lib/libspscring.so.$VER"
-"$STRIP" --strip-unneeded "$STAGE/usr/local/lib/libspscring.so.$VER"
-ln -sf "libspscring.so.$VER" "$STAGE/usr/local/lib/libspscring.so.$MAJOR"
-ln -sf "libspscring.so.$VER" "$STAGE/usr/local/lib/libspscring.so"
+install -m 0755 "build/release/libspscring.so.$VER" "$LIB_DIR/libspscring.so.$VER"
+"$STRIP" --strip-unneeded "$LIB_DIR/libspscring.so.$VER"
+ln -sf "libspscring.so.$VER" "$LIB_DIR/libspscring.so.$MAJOR"
+ln -sf "libspscring.so.$VER" "$LIB_DIR/libspscring.so"
 
-install -m 0644 build/release/libspscring.a "$STAGE/usr/local/lib/libspscring.a"
+install -m 0644 build/release/libspscring.a "$LIB_DIR/libspscring.a"
 
 # Gate the staged, stripped shared library: the exact deb payload must carry
 # the hardening the release profile promises. A hard failure aborts the build.
-"${ROOT_DIR}/utils/check_hardening.sh" "$STAGE/usr/local/lib/libspscring.so.$VER"
+"${ROOT_DIR}/utils/check_hardening.sh" "$LIB_DIR/libspscring.so.$VER"
 
 # Control file
 cat > "$STAGE/DEBIAN/control" <<EOF
@@ -92,12 +99,14 @@ printf '\nBuilt complete\n'
 
 OUT_DIR="${OUT_DIR:-${ROOT_DIR}/build/debs}"
 mkdir -p "$OUT_DIR"
+# Keep incremental builds single-valued so CI and humans cannot select an older package.
+rm -f "${OUT_DIR}/${PKG_NAME}_"*.deb "${OUT_DIR}/SHA256SUMS"
 mv -f "$DEB" "$OUT_DIR/"
 
-# Refresh the checksum manifest covering every deb sitting next to this one.
+# The manifest describes exactly the artifact produced by this invocation.
 (
     cd "$OUT_DIR"
-    sha256sum -- *.deb > SHA256SUMS
+    sha256sum -- "$DEB" > SHA256SUMS
 )
 printf 'checksums: %s/SHA256SUMS\n' "$OUT_DIR"
 
