@@ -7,7 +7,7 @@ name: Security
 
 on:
   push:
-    branches: [reorganization, main]
+    branches: [master, safety_upgrades]
   pull_request:
   schedule:
     - cron: "0 6 * * 1" # every Monday 06:00 UTC
