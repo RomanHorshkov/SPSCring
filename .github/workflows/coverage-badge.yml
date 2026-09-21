@@ -16,7 +16,8 @@ on:
     types: [completed]
 
 permissions:
-  contents: write
+  contents: write # commit the badge back
+  actions: read   # download-artifact from ANOTHER run needs this on a private repo (public repos allow it implicitly)
 
 jobs:
   update-badge:
