@@ -1,5 +1,4 @@
 build/
-cmake-build*/
-tests/results/*
-!tests/results/.gitkeep
+tests/results/
+*.gcov
 .clang-format

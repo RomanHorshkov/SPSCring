@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and run the unit and integration suites under ASan, UBSan, and LSan.
+# Build and run unit, integration, and stress suites under ASan, UBSan, and LSan.
 set -euo pipefail
 
 START_DIR="$(pwd -P)"
@@ -53,6 +53,11 @@ run_sanitized() {
 
 build_binary "ut" "tests/UTs" "ut_sanitized" "tests/UTs"
 build_binary "it" "tests/ITs" "it_sanitized" "tests/ITs"
+gcc "${CPPFLAGS_SANITIZE[@]}" -DSPSC_REQUIRE_ALWAYS_LOCK_FREE -D_GNU_SOURCE \
+    -DN_ITEMS=500000 -Iapp "${SANITIZE_CFLAGS[@]}" \
+    app/spscring.c tests/stress/stress_mt.c \
+    -o "${BUILD_DIR}/stress_sanitized" "${SANITIZE_LDFLAGS[@]}" -pthread
 
 run_sanitized "${BUILD_DIR}/ut_sanitized"
 run_sanitized "${BUILD_DIR}/it_sanitized"
+run_sanitized "${BUILD_DIR}/stress_sanitized"

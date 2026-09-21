@@ -11,8 +11,8 @@
 #
 #     ./utils/run_pipeline.sh
 #
-# ThreadSanitizer is OFF by default (it misbehaves on this host); set
-# GCC_BUILD_ENABLE_TSAN=1 to add the tsan profile where profiles apply.
+# ThreadSanitizer is OFF locally by default (it misbehaves on some hosts); set
+# GCC_BUILD_ENABLE_TSAN=1 to build the TSan profile and run the TSan IT/stress gate.
 # =============================================================================
 set -uo pipefail
 
@@ -88,7 +88,7 @@ report_debs() {
 }
 
 # Print per-file line/branch/function coverage from gcovr's coverage-summary.json
-# (produced by make_UTs_cov.sh). Missing file is reported, not silently skipped.
+# (produced by build_UTs.sh). Missing file is reported, not silently skipped.
 report_coverage() {
     printf '\n%s== Coverage ==%s\n' "${c_bold}" "${c_rst}"
     local path="${ROOT_DIR}/tests/results/UTs/coverage-summary.json"
@@ -111,10 +111,15 @@ PY
 printf '%s\u2554\u2550\u2550 %s pipeline \u2550\u2550\u2550\u2550%s\n' "${c_bold}" "${PKG_LABEL}" "${c_rst}"
 
 stage "build"          bash "${SCRIPT_DIR}/build_libs.sh"
-stage "unit-tests-release" bash "${SCRIPT_DIR}/make_UTs_release.sh"
-stage "unit-tests-coverage" bash "${SCRIPT_DIR}/make_UTs_cov.sh"
-stage "integration-tests"  bash "${SCRIPT_DIR}/make_ITs.sh"
-stage "sanitizer-tests"    bash "${SCRIPT_DIR}/make_sanitizer_tests.sh"
+stage "unit-tests-release" bash "${SCRIPT_DIR}/build_UTs_release.sh"
+stage "unit-tests"         bash "${SCRIPT_DIR}/build_UTs.sh"
+stage "integration"        bash "${SCRIPT_DIR}/build_ITs.sh"
+stage "sanitizer-tests"    bash "${SCRIPT_DIR}/build_sanitizer_tests.sh"
+stage "stress-build"       bash "${SCRIPT_DIR}/build_stress.sh"
+stage "stress-run"         bash "${SCRIPT_DIR}/run_stress.sh"
+if [[ "${GCC_BUILD_ENABLE_TSAN:-0}" == "1" ]]; then
+    stage "thread-sanitizer-tests" bash "${SCRIPT_DIR}/build_tsan_tests.sh"
+fi
 stage "package"        bash "${SCRIPT_DIR}/build_deb.sh"
 
 report_coverage
