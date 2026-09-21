@@ -1,9 +1,9 @@
 # SPSCring
 
-[![Quality](https://github.com/RomanHorshkov/SPSCring/actions/workflows/quality.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/quality.yml)
-[![Security](https://github.com/RomanHorshkov/SPSCring/actions/workflows/security.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/security.yml)
-[![Release](https://github.com/RomanHorshkov/SPSCring/actions/workflows/release.yml/badge.svg)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/release.yml)
-[![Coverage](https://img.shields.io/badge/UT_coverage-100%25-brightgreen)](tests/results/UTs/UTs_coverage.html)
+[![Quality](https://github.com/RomanHorshkov/SPSCring/actions/workflows/quality.yml/badge.svg?branch=master)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/quality.yml?query=branch%3Amaster)
+[![Security](https://github.com/RomanHorshkov/SPSCring/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/security.yml?query=branch%3Amaster)
+[![Release](https://github.com/RomanHorshkov/SPSCring/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/RomanHorshkov/SPSCring/actions/workflows/release.yml?query=branch%3Amaster)
+![Coverage](.github/badges/coverage.svg)
 [![Version](https://img.shields.io/github/v/tag/RomanHorshkov/SPSCring?label=version)](https://github.com/RomanHorshkov/SPSCring/tags)
 [![License](https://img.shields.io/github/license/RomanHorshkov/SPSCring)](LICENSE)
 

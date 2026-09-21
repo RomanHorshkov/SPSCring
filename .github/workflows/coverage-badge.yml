@@ -1,0 +1,57 @@
+name: Coverage badge
+
+# Runs after a successful push-triggered Quality run, downloads the combined
+# unit-test coverage summary it produced, and commits a refreshed badge to the
+# branch that was pushed. Same design as uuid7's and EMlog's badge workflow.
+#
+# The badge is committed as an SVG (and as a shields.io endpoint JSON): this
+# repository is private, so a shields.io endpoint badge cannot fetch the JSON
+# from raw.githubusercontent.com — the README embeds the SVG by relative path
+# instead, which GitHub renders for anyone who can read the repository. The
+# JSON is kept so switching to the endpoint badge is one README line when the
+# repository goes public.
+on:
+  workflow_run:
+    workflows: ["Quality"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  update-badge:
+    name: Update coverage badge
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: uts-coverage
+          path: uts-coverage
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute badge color + write SVG and endpoint JSON
+        run: |
+          SUMMARY="$(find uts-coverage -name 'coverage-summary.json' | head -1)"
+          if [[ -z "${SUMMARY}" ]]; then
+            echo "no coverage-summary.json in the uts-coverage artifact" >&2
+            exit 1
+          fi
+          python3 utils/write_coverage_badge.py "${SUMMARY}" .github/badges/coverage.json .github/badges/coverage.svg
+      - name: Commit badge if it changed
+        run: |
+          if git diff --quiet -- .github/badges/; then
+            echo "coverage unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/badges/coverage.json .github/badges/coverage.svg
+          git commit -m "ci: update coverage badge [skip ci]"
+          git push origin "HEAD:${{ github.event.workflow_run.head_branch }}"
