@@ -25,6 +25,7 @@ concurrency:
 jobs:
   codeql:
     name: CodeQL
+    if: github.actor != 'dependabot[bot]' # Dependabot runs get a read-only token and cannot upload results
     runs-on: ubuntu-latest
     permissions:
       contents: read

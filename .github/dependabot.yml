@@ -1,5 +1,4 @@
-# Keeps the full-length SHA pins of every action current. A pin never moves on its
-# own; every bump arrives as a reviewable PR with the upstream changelog.
+# One weekly PR bumping every action pin together.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -7,4 +6,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    groups:
+      github-actions:
+        patterns: ["*"]
     labels: [dependencies, github-actions]
