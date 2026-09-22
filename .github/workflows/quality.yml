@@ -111,7 +111,7 @@ jobs:
         run: ./utils/build_UTs.sh
       - name: Upload coverage artifacts (HTML/XML/JSON)
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: uts-coverage
           path: tests/results/UTs
@@ -137,7 +137,7 @@ jobs:
         run: ./utils/run_stress.sh
       - name: Upload stress results
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: stress-results
           if-no-files-found: warn
@@ -205,7 +205,7 @@ jobs:
       - name: Smoke test the installed package
         run: ./utils/smoke_test_package.sh
       - name: Upload package artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: deb-package
           path: |
