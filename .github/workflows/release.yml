@@ -1,16 +1,8 @@
 name: Release
 
-# Full reusable Quality gate must pass before anything is published. Fires on a v* tag push;
-# validates the tag matches VERSION, builds the release bundle (tarball + .deb), creates the
-# GitHub Release directly from this job (no separate `release: published` trigger — a second
-# trigger path here would let a tag push and a manually-drafted release race each other into
-# the same job with two different `github.ref` shapes; one proven trigger is enough — mirrors
-# uuid7/SPSCring/MPSCring's own release.yml, all single-trigger).
-#
-# No build-provenance attestation here: actions/attest-build-provenance is unavailable for
-# user-owned private repositories (same GitHub platform wall as CodeQL in security.yml), and
-# it hard-fails the job rather than degrading gracefully. Re-add it (mirroring uuid7/SPSCring/
-# MPSCring's own release.yml) if/when the repo goes public or moves to an org with GHAS.
+# Quality gate first, then the shared release pipeline from cicd (tag check, build,
+# .deb, bundle, attestation, GitHub Release). A workflow_dispatch run skips the tag
+# check and publishes nothing: it only uploads the release-assets bundle.
 
 on:
   push:
@@ -30,81 +22,16 @@ jobs:
     name: Quality gate
     uses: ./.github/workflows/quality.yml
 
-  build-release-assets:
-    name: Build release assets
+  release:
+    name: Release
     needs: quality-gate
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
     permissions:
-      contents: write # create the GitHub release
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          persist-credentials: false
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config fakeroot
-
-      - name: Read version
-        id: version
-        run: echo "value=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
-
-      - name: Verify tag matches VERSION
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          EXPECTED_TAG="v${{ steps.version.outputs.value }}"
-          ACTUAL_TAG="${GITHUB_REF_NAME}"
-          if [ "$ACTUAL_TAG" != "$EXPECTED_TAG" ]; then
-            echo "Tag/version mismatch: expected $EXPECTED_TAG but got $ACTUAL_TAG"
-            exit 1
-          fi
-
-      - name: Build libraries
-        run: ./utils/build_libs.sh release
-
-      - name: Build Debian package
-        run: ./utils/build_deb.sh
-
-      - name: Assemble release bundle
-        run: |
-          VER="${{ steps.version.outputs.value }}"
-          STAGE_DIR="build/release-stage/spscring-${VER}"
-          BUNDLE_DIR="build/release-bundle"
-          mkdir -p "${STAGE_DIR}/include" "${STAGE_DIR}/lib" "${BUNDLE_DIR}"
-
-          cp app/spscring.h "${STAGE_DIR}/include/"
-          cp build/release/libspscring.a "${STAGE_DIR}/lib/"
-          cp build/release/libspscring.so."${VER}" "${STAGE_DIR}/lib/"
-          ln -sf "libspscring.so.${VER}" "${STAGE_DIR}/lib/libspscring.so"
-
-          tar -C "build/release-stage" -czf \
-            "${BUNDLE_DIR}/spscring-${VER}-linux-x86_64.tar.gz" \
-            "spscring-${VER}"
-
-          cp build/debs/*.deb "${BUNDLE_DIR}/"
-
-          (
-            cd "${BUNDLE_DIR}"
-            sha256sum * > SHA256SUMS
-          )
-
-      - name: Upload workflow artifacts
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: release-assets
-          if-no-files-found: error
-          path: |
-            build/release-bundle/*
-
-      - name: Create GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            build/release-bundle/* \
-            --generate-notes \
-            --title "SPSCring ${GITHUB_REF_NAME}"
+      contents: write
+      id-token: write
+      attestations: write
+    uses: RomanHorshkov/cicd/.github/workflows/c-release.yml@v1
+    with:
+      lib-name: spscring
+      title: SPSCring
+    secrets:
+      SIBLING_REPOS_PAT: ${{ secrets.SIBLING_REPOS_PAT }}
