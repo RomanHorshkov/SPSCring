@@ -48,7 +48,7 @@ jobs:
         run: ./utils/build_libs.sh release
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@f09c1c0a94de965c15400f5634aa42fac8fb8f88 # v3.27.0
+        uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v3.27.0
 
   compiler-analyzer:
     name: GCC static analyzer (-fanalyzer)
