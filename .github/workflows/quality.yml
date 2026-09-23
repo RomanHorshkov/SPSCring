@@ -190,18 +190,21 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config fakeroot
-      - name: Build .deb
+      - name: Build .debs
         run: ./utils/build_deb.sh
-      - name: Install the built .deb
+      - name: Install the built .debs (runtime + dev)
         run: |
           VERSION="$(tr -d '[:space:]' < VERSION)"
           ARCH="$(dpkg --print-architecture)"
-          DEB_FILE="build/debs/spscring_${VERSION}_${ARCH}.deb"
-          if [[ ! -f "${DEB_FILE}" ]]; then
-            echo "expected package not found: ${DEB_FILE}" >&2
-            exit 1
-          fi
-          sudo apt-get install -y "./${DEB_FILE}"
+          DEB_RT="build/debs/libspscring_${VERSION}_${ARCH}.deb"
+          DEB_DEV="build/debs/libspscring-dev_${VERSION}_${ARCH}.deb"
+          for f in "${DEB_RT}" "${DEB_DEV}"; do
+            if [[ ! -f "${f}" ]]; then
+              echo "expected package not found: ${f}" >&2
+              exit 1
+            fi
+          done
+          sudo apt-get install -y "./${DEB_RT}" "./${DEB_DEV}"
       - name: Smoke test the installed package
         run: ./utils/smoke_test_package.sh
       - name: Upload package artifacts

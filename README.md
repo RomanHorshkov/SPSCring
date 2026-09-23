@@ -160,8 +160,13 @@ The [`Release` workflow](./.github/workflows/release.yml) requires the full
 [`Quality` gate](./.github/workflows/quality.yml) to pass, then rejects a tag
 that does not equal `v${VERSION}`. It builds the release library, strips the
 staged shared object, verifies that exact object with `utils/check_hardening.sh`,
-attaches a build-provenance attestation, and publishes both
-`spscring_<version>_<architecture>.deb` and `SHA256SUMS` to the GitHub Release.
+attaches a build-provenance attestation, and publishes the packages and `SHA256SUMS`
+to the GitHub Release:
+
+- `libspscring_<version>_<arch>.deb` — runtime: `/usr/local/lib/libspscring.so.<version>` + soname symlink, `ldconfig` hooks.
+- `libspscring-dev_<version>_<arch>.deb` — development: `/usr/local/include/spscring.h`, `/usr/local/lib/libspscring.a`, `libspscring.so` linker symlink. Depends on `libspscring (= <version>)`.
+
+Both replace the former single `spscring` package.
 
 To build and verify the package locally without publishing a release:
 
@@ -169,6 +174,7 @@ To build and verify the package locally without publishing a release:
 ./utils/build_deb.sh
 cd build/debs
 sha256sum --check SHA256SUMS
+sudo apt-get install ./libspscring_<version>_<arch>.deb ./libspscring-dev_<version>_<arch>.deb
 ```
 
 The workflow can also be run without a tag from the GitHub Actions interface
