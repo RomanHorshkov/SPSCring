@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   quality:
-    uses: RomanHorshkov/cicd/.github/workflows/c-quality.yml@improving_cicd
+    uses: RomanHorshkov/cicd/.github/workflows/c-quality.yml@v1
     with:
       lib-name: spscring
       strict-cflags: "-std=c11 -O2 -Wall -Wextra -Wpedantic -Werror -DSPSC_REQUIRE_ALWAYS_LOCK_FREE"
