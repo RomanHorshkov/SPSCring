@@ -1,0 +1,16 @@
+@startuml
+' claim: this repository builds from its sysroot with the pinned kyr-build; no tooling copy lives here
+actor Developer
+participant "utils/deps.sh (wrapper)" as W
+participant "build/sysroot" as S
+participant "utils/run_pipeline.sh" as P
+participant "build/debs" as D
+Developer -> W : ./utils/deps.sh sysroot
+W -> S : kyr-build <ver> by sha256 from deps.txt, then every other pin
+W --> Developer : exports (eval)
+Developer -> P : ./utils/run_pipeline.sh
+P -> S : source share/kyr-build/gcc_build_profiles.sh (via utils/ wrapper)
+P -> P : build every profile, tests, check_hardening.sh
+P -> D : build_deb.sh
+D --> Developer : *.deb, SHA256SUMS, copied to ~/.cache/rh-deps/debs for the next consumer
+@enduml
