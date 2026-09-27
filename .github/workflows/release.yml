@@ -1,8 +1,7 @@
 name: Release
 
-# Quality gate first, then the shared release pipeline from cicd (tag check, build,
-# .deb, bundle, attestation, GitHub Release). A workflow_dispatch run skips the tag
-# check and publishes nothing: it only uploads the release-assets bundle.
+# Quality gate first, then the shared release from cicd: tag check, kyr-build bootstrap, double build on two runners,
+# hash compare, GitHub Release. A workflow_dispatch run skips the tag check and publishes nothing.
 
 on:
   push:
@@ -15,12 +14,13 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false # never cancel a release mid-flight
+  cancel-in-progress: false
 
 jobs:
   quality-gate:
     name: Quality gate
     uses: ./.github/workflows/quality.yml
+    secrets: inherit
 
   release:
     name: Release
@@ -29,8 +29,9 @@ jobs:
       contents: write
       id-token: write
       attestations: write
-    uses: RomanHorshkov/cicd/.github/workflows/c-release.yml@v1
+    uses: RomanHorshkov/cicd/.github/workflows/c-release.yml@v2
     with:
+      kind: lib
       lib-name: spscring
       title: SPSCring
     secrets:
