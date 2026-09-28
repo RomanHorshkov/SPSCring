@@ -1,0 +1,12 @@
+# SPSCring public ABI, written by check_abi.sh --update (kyr-build): a changed line needs a major, a new name a minor.
+major 1
+data_model pointer 8 long 8
+function spsc_ring_capacity returns uint64_t params 1 (const spsc_ring_t *)
+function spsc_ring_destroy returns void params 1 (spsc_ring_t **)
+function spsc_ring_init returns spsc_ring_t * params 1 (uint64_t)
+function spsc_ring_is_empty returns int params 1 (spsc_ring_t *)
+function spsc_ring_is_full returns int params 1 (spsc_ring_t *)
+function spsc_ring_pop returns int params 2 (spsc_ring_t *, int *)
+function spsc_ring_push returns int params 2 (spsc_ring_t *, int)
+function spsc_ring_reset returns void params 1 (spsc_ring_t *)
+function spsc_ring_size returns uint64_t params 1 (const spsc_ring_t *)

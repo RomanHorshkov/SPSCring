@@ -110,7 +110,9 @@ PY
 
 printf '%s\u2554\u2550\u2550 %s pipeline \u2550\u2550\u2550\u2550%s\n' "${c_bold}" "${PKG_LABEL}" "${c_rst}"
 
+stage "abi"            bash "${SCRIPT_DIR}/check_abi.sh"
 stage "build"          bash "${SCRIPT_DIR}/build_libs.sh"
+stage "abi-exports"    bash "${SCRIPT_DIR}/check_abi.sh" --exports "${ROOT_DIR}/build/release/libspscring.so"
 stage "unit-tests-release" bash "${SCRIPT_DIR}/build_UTs_release.sh"
 stage "unit-tests"         bash "${SCRIPT_DIR}/build_UTs.sh"
 stage "integration"        bash "${SCRIPT_DIR}/build_ITs.sh"

@@ -1,0 +1,11 @@
+@startuml
+' claim: the public header decides both abi/layout.txt and the exports of libspscring.so; the gate refuses any drift between them
+rectangle "app/spscring.h" as H
+rectangle "abi/layout.txt\n(committed, SemVer-gated)" as L
+rectangle "utils/spscring.map\nSPSCRING_<major> { exactly the declared functions }" as M
+rectangle "build/release/libspscring.so" as S
+H --> L : utils/check_abi.sh (stage abi)
+L --> M : the function lines
+M --> S : --version-script
+S ..> L : utils/check_abi.sh --exports (stage abi-exports)
+@enduml
