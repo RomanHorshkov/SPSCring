@@ -7,4 +7,4 @@ apt     pkg-config
 apt     fakeroot
 apt     libcmocka-dev             >=1.1.7
 apt     gcovr
-own     kyr-build                 2.0.3      RomanHorshkov/Utils    991db1e4fed393a09f98345a6d7178f9ade0c28a33db7e22a6b067b982bfca34
+own     kyr-build                 2.0.3      RomanHorshkov/kyr_build 991db1e4fed393a09f98345a6d7178f9ade0c28a33db7e22a6b067b982bfca34
