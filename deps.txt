@@ -4,7 +4,6 @@
 #   own     <package>   <exact>   <owner/repo>  <sha256>  [optional]  .deb from that repository's GitHub Release v<exact>
 apt     build-essential
 apt     pkg-config
-apt     fakeroot
 apt     libcmocka-dev             >=1.1.7
 apt     gcovr
-own     kyr-build                 2.0.3      RomanHorshkov/kyr_build 991db1e4fed393a09f98345a6d7178f9ade0c28a33db7e22a6b067b982bfca34
+own     kyr-build                 2.1.0      RomanHorshkov/kyr_build 420cc1f7ddcb5590b4576cb8730df705b5ae101086a37c00c316e0ff3761f924
