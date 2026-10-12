@@ -52,6 +52,3 @@ KYR_ABI_FUNC_PREFIX="spsc_ring_"
 KYR_ABI_CONST_PREFIX="SPSC_RING_"
 KYR_ABI_NODE="SPSCRING"
 
-# The legacy-names gate until kyr-build 3.0.0 is pinned and runs it as its own stage: its check and patterns, copied, and the test.
-KYR_REPO_GATES+=(check_legacy_names.sh legacy_names.pat)
-KYR_PIPELINE_EXTRA+=("checks|legacy-names|./utils/check_legacy_names.sh" "checks|legacy-names-test|bash tests/legacy_names_test.sh")

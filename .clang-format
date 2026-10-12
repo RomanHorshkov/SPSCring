@@ -75,6 +75,23 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
 # Enforce deterministic ordering for includes
 IncludeIsMainRegex: '([-_](test|unittest))?$'
+# Google's categories, plus <cmocka.h> after the C headers it needs (stdarg.h, stddef.h, setjmp.h: cmocka 1.1.7)
+IncludeCategories:
+  - Regex: '^<ext/.*\.h>'
+    Priority: 2
+    SortPriority: 3
+  - Regex: '^<cmocka\.h>$'
+    Priority: 1
+    SortPriority: 2
+  - Regex: '^<.*\.h>'
+    Priority: 1
+    SortPriority: 1
+  - Regex: '^<.*'
+    Priority: 2
+    SortPriority: 3
+  - Regex: '.*'
+    Priority: 3
+    SortPriority: 4
 SortUsingDeclarations: true
 
 # Advanced: Code readability and consistency settings
