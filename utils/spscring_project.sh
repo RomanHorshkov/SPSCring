@@ -33,6 +33,7 @@ KYR_SUITE_STRESS_CPPFLAGS_TSAN=(-DN_ITEMS=200000u)
 KYR_SUITE_STRESS_LDLIBS=(-pthread)
 KYR_SANITIZE_SUITES=(ut it stress)
 KYR_TSAN_SUITES=(it stress)
+GCC_BUILD_ENABLE_TSAN=1 # the catalog, sourced first, sets 0 when unset: the tsan stage runs in every pipeline
 
 # libspscring and libspscring-dev, both replacing the former single package "spscring".
 KYR_PKG="libspscring"
