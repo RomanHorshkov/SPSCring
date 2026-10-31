@@ -24,6 +24,8 @@ KYR_SUITE_IT_LDLIBS=(-lcmocka -pthread)
 KYR_COVERAGE_SUITES=(ut it)
 KYR_UT_FAIL_UNDER_LINE=100
 KYR_UT_FAIL_UNDER_BRANCH=100
+# The coverage badge (.github/badges/coverage.svg, the README's Coverage line, and its endpoint JSON) from the gated run's summary.
+KYR_PIPELINE_EXTRA=("post|coverage-badge|[[ ! -f tests/results/UTs/coverage-summary.json ]] || python3 build/sysroot/share/kyr-build/coverage_badge.py tests/results/UTs/coverage-summary.json .github/badges/coverage.json .github/badges/coverage.svg")
 # The large-scale proof against the release archive; a reduced run under the sanitizers.
 KYR_STRESS_SUITES=(stress)
 KYR_SUITE_STRESS_SOURCES=(tests/stress/stress_mt.c)
