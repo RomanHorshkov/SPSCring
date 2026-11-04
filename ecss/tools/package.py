@@ -9,7 +9,8 @@ The CSVs use the rms import format (human_id,kind,title,body,rationale,criteria,
 `owner` is the person of rms/cast.csv who writes it; `notes` carries `doc=<DOC>` (the document holding it: a has-child link from
 <KEY>-DOC-<DOC>, made by the item's writer) and `review=<SRR|PDR|CDR|QR>` (the review that approves it; a document's is the first of its
 `reviews=`). A reference is `<path>#<anchor>`: a Markdown heading's slug (GitHub's rule: lowercase, every character but a letter, a digit,
-a space or a hyphen dropped, spaces to hyphens, a repeated slug in one file -1, -2, ...) or lines `L<n>` / `L<n>-L<m>`. In an item's
+a space, a hyphen or an underscore dropped, spaces to hyphens, a repeated slug in one file -1, -2, ...), a heading's explicit id
+(` {#id}` at its end), or lines `L<n>` / `L<n>-L<m>`. In an item's
 fields a path is the repository's (customers/<repo>/<path> for a customer's file, listed in rms/customers.csv); in a document's links it
 is relative to the document, as a Markdown link is. Standard library only; deterministic.
 """
@@ -31,7 +32,7 @@ LINK_TYPES = {"derives-from", "refines", "allocates-to", "satisfies", "verifies"
               "depends-on", "traces-to", "assumption-for", "justified-by", "constrained-by", "reviews", "has-child", "belongs-to", "covers"}
 REVIEWS = ["SRR", "PDR", "CDR", "QR"]
 GENERATED = {"doxygen"}  # a document whose file the loader writes (notes generated=<what>), not kept in the tree
-REF = re.compile(r"(?<![\w/.\-])((?:[\w.\-]+/)*[\w.\-]+\.[A-Za-z0-9]+)#([A-Za-z0-9][A-Za-z0-9\-]*)")
+REF = re.compile(r"(?<![\w/.\-])((?:[\w.\-]+/)*[\w.\-]+\.[A-Za-z0-9]+)#([A-Za-z0-9_][A-Za-z0-9_\-]*)")
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 MARK = re.compile(r"<!-- ecss:table ([a-z\-]+)((?: [a-z]+=[^ ]+)*) -->\n.*?<!-- /ecss:table -->", re.S)
 
@@ -117,13 +118,15 @@ def customers(pkg=PKG):
 
 # ---- anchors ------------------------------------------------------------------------------------------------------------------------
 def slug(heading):
+    """GitHub's slug: lowercase; every character but a letter, a digit, a space, a hyphen or an underscore dropped; spaces to hyphens."""
     s = heading.strip().lower()
-    s = "".join(ch for ch in s if ch.isalnum() or ch in " -")
+    s = "".join(ch for ch in s if ch.isalnum() or ch in " -_")
     return s.replace(" ", "-")
 
 
 def anchors(text):
-    """Every heading's slug in a Markdown text (a repeated one -1, -2, ...), fenced code skipped."""
+    """Every heading's anchor in a Markdown text: its slug (a repeated one -1, -2, ...), and its explicit id when it ends ` {#id}`;
+    fenced code skipped."""
     seen, out, fence = {}, set(), False
     for line in text.split("\n"):
         if line.lstrip().startswith("```"):
@@ -131,7 +134,12 @@ def anchors(text):
             continue
         m = None if fence else re.match(r"^(#{1,6})\s+(.*?)\s*#*\s*$", line)
         if m:
-            s = slug(re.sub(r"`|\*\*|\[|\]\([^)]*\)", "", m.group(2)))
+            title = m.group(2)
+            ex = re.search(r"\s*\{#([A-Za-z0-9_\-]+)\}\s*$", title)
+            if ex:
+                out.add(ex.group(1))
+                title = title[:ex.start()]
+            s = slug(re.sub(r"`|\*\*|\[|\]\([^)]*\)", "", title))
             n = seen.get(s, 0)
             out.add(s if n == 0 else "%s-%d" % (s, n))
             seen[s] = n + 1
