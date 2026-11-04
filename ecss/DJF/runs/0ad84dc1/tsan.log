@@ -1,0 +1,22 @@
+CC app/spscring.c
+CC tests/ITs/integration_tests.c
+LD $ROOT/build/tsan/it/it
+CC tests/stress/stress_mt.c
+LD $ROOT/build/tsan/stress/stress
+RUN build/tsan/it/it
+[==========] tests: Running 3 test(s).
+[ RUN      ] test_simple_flow
+[       OK ] test_simple_flow
+[ RUN      ] test_threaded_flow
+[       OK ] test_threaded_flow
+[ RUN      ] test_size_never_underflows_concurrently
+[       OK ] test_size_never_underflows_concurrently
+[==========] tests: 3 test(s) run.
+[  PASSED  ] 3 test(s).
+RUN build/tsan/stress/stress
+SPSCring stress: 1 producer x 200000 items, ring capacity 4096
+  consumed_count=200000 (expected 200000)
+  produced_sum=20000100000 consumed_sum=20000100000 (match: yes)
+  elapsed=0.106s  throughput=1889556 ops/s
+
+STRESS TEST PASSED (exactly-once, in-order, proven via per-item bitmap)

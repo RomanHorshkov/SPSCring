@@ -1,0 +1,1 @@
+check_abi: libspscring.so exports exactly the 9 declared functions, all @@SPSCRING_1

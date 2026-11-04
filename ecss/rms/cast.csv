@@ -1,0 +1,10 @@
+key,person,roles,granted_by,duties
+owner,the box owner,,,"creates the project SPSCRING from the ecss template, grants the project manager; hangs SPSCRING under KYR once KYR's baseline is on the box"
+spm,Elena Russo,project-admin;author,owner,"grants the team; writes the package overview and the tailoring; plans the reviews; raises the change requests on the documentation"
+cust,Oliver Hughes,author;reviewer;approver,spm,"the customer's representative (KYR, the platform): writes the requirements baseline (SSS, IRD, SOW and their requirements); takes KYR's baseline as the input; closes the SRR, the PDR and the QR; approves the ICD and the PDR and QR baselines"
+eng1,Luca Romano,author,spm,"requirements and interfaces: the SRS, the ICD, the assumptions and the sources; derives the SRS from the requirements baseline"
+eng2,Emily Clarke,author,spm,"design and code: the components, the decisions, the SDD, the SUM and the API reference; files the code and the repository's documents into the space"
+ver,Davide Conti,author,spm,"verification: the cases, the SVS and the SVR; records the release pipeline's runs at the release commit with their logs as evidence"
+rev,James Whitfield,reviewer;author,spm,"independent reviewer: opens each review and raises the RIDs"
+pam,Francesca Galli,approver,spm,"product assurance: approves the items, the RIDs' dispositions and the change requests; closes the CDR; approves the SRR and CDR baselines"
+cm,Sarah Collins,config-master,spm,"configuration: freezes each review's baseline at the release commit"

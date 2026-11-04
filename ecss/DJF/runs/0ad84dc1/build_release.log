@@ -1,0 +1,22 @@
+CC app/spscring.c
+AR $ROOT/build/release/libspscring.a
+LD $ROOT/build/release/libspscring.so.1.0.8
+CHECK $ROOT/build/release/libspscring.so.1.0.8 $ROOT/build/release/libspscring.a
+$ROOT/build/release/libspscring.so.1.0.8  [lib]
+  ✓ non-executable stack
+  ✓ GNU_RELRO segment present
+  ✓ immediate binding (full RELRO)
+  ✓ no TEXTREL
+  ✓ no RPATH/RUNPATH
+  ✓ symbol versions within GLIBC_2.39 GLIBCXX_3.4.33 CXXABI_1.3.15 GCC_14.0.0
+  ✓ every DT_NEEDED on the allowlist
+  ✓ versioned SONAME libspscring.so.1
+  ✓ no build-host path strings
+  ! not stripped (.symtab present) — expected before build_deb's strip, unexpected in a staged deb payload (WARN)
+  ! no __stack_chk_fail reference — no protected frames (fine for tiny libs) or missing -fstack-protector-strong (WARN)
+  ! no __*_chk symbols — all checked calls proven safe, no fortifiable calls, or missing -D_FORTIFY_SOURCE (WARN)
+
+$ROOT/build/release/libspscring.a  [archive]
+  ✓ all 1 member object(s) position-independent
+
+check_hardening: all hard checks passed (2 file(s))

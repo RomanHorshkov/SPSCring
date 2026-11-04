@@ -1,0 +1,9 @@
+  apt     build-essential            12.12ubuntu2.26.04.2 ok
+  apt     pkg-config                 2.5.1-4 ok
+  apt     libcmocka-dev              2.0.2-1 ok
+  apt     gcovr                      7.2+really-2 ok
+  own     kyr-build                  3.1.1 ok (sysroot)
+tiers: SPSCring declares tier 1 (foundation)
+  map     SPSCring                   tier 1 in the fixed map, agrees
+  tier    kyr-build                  tier 0 ok (X-Kyr-Tier 0 build)
+deps: matches deps.txt

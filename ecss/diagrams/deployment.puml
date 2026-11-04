@@ -1,0 +1,23 @@
+@startuml
+' SPSCRING-DOC-SDD, figure 4-2: where the library is built, delivered and linked (SPSCRING-IF-007, IF-008, CI-DEBS)
+title SPSCring 1.0.8: delivery and linkage
+skinparam shadowing false
+node "build root (kyr-build 3.1.1)" as BR {
+  artifact "libspscring_1.0.8_amd64.deb\n/usr/local/lib/libspscring.so.1.0.8\nsoname libspscring.so.1" as RT
+  artifact "libspscring-dev_1.0.8_amd64.deb\n/usr/local/include/spscring.h\n/usr/local/lib/libspscring.a\nlibspscring.so -> .so.1" as DEV
+}
+node "the platform's release train (kyr 0.40.0)" as TRAIN {
+  artifact "deps.txt pins\nlibspscring 1.0.7 sha256 f37af67a..." as PIN
+}
+node "the box" as BOX {
+  component "kyr-server-* (kyr_server 3.14.0)\nlinks kyr_host statically,\nlibspscring.so.1 at run time" as SRV
+}
+DEV ..> RT : Depends: libspscring (= 1.0.8)
+RT --> PIN : published with the release\n(SHA256SUMS)
+PIN --> SRV : installed by kyr-apply
+note bottom of SRV
+  exports: exactly the 9 functions of spscring.h,
+  each <name>@@SPSCRING_1 (utils/spscring.map);
+  a consumer built against another major fails at load
+end note
+@enduml
