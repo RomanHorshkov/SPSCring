@@ -1,6 +1,6 @@
 /* Project: https://github.com/RomanHorshkov */
 /**
- * @file spsc_ring.h
+ * @file spscring.h
  * @brief Single-producer single-consumer (SPSC) ring buffer API.
  *
  * Constraints:

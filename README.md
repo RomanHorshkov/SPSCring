@@ -17,7 +17,7 @@ The following behaviors are part of the public interface and must remain stable:
 
 - `spsc_ring_push(NULL, ...)` returns `-1`.
 - `spsc_ring_pop(NULL, ...)` returns `-1`.
-- `spsc_ring_is_empty(NULL)` returns `0`.
+- `spsc_ring_is_empty(NULL)` returns `1`.
 - `spsc_ring_is_full(NULL)` returns `0`.
 - `spsc_ring_capacity(NULL)` returns `0`.
 - `spsc_ring_size(NULL)` returns `0`.
@@ -64,7 +64,7 @@ Wrap time intuition for a counter of width `N`:
 Examples:
 
 - At 1,000,000 ops/s, a `uint32_t` counter wraps in about 71 minutes.
-- At 1,000,000 ops/s, a `uint64_t` counter wraps in about 584 years.
+- At 1,000,000 ops/s, a `uint64_t` counter wraps in about 585,000 years.
 
 ## Build system
 
