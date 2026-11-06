@@ -77,7 +77,8 @@ Examples:
 - `utils/build_sanitizer_tests.sh` runs UTs, ITs, and a reduced stress run under ASan, UBSan, and LSan.
 - `tests/stress/stress_mt.c` is the large-scale proof: one producer against one consumer for millions of hand-offs, correctness by a consumer-owned per-item bitmap (duplicate or out-of-order delivery aborts immediately). `utils/build_stress.sh` + `utils/run_stress.sh` build and run it (results under `tests/results/stress/`).
 - `utils/build_tsan_tests.sh` separately runs ITs and reduced stress under ThreadSanitizer (never mixed with ASan); it runs the binaries under `setarch -R` because ASLR on recent kernels breaks TSan's shadow mapping.
-- `utils/build_deb.sh` builds `libspscring` and `libspscring-dev` + `SHA256SUMS` (hardening-checked); `utils/run_pipeline.sh` runs the whole board (deps and tiers, template, ABI, every profile, release UTs, coverage, ITs, sanitizers, stress, optional local TSan with `GCC_BUILD_ENABLE_TSAN=1`, packaging, the smoke test against the built debs).
+- `utils/build_deb.sh` builds `libspscring` and `libspscring-dev` + `SHA256SUMS` (hardening-checked); `utils/run_pipeline.sh` runs the whole board (deps and tiers, template, the docs gate, ABI, every profile, release UTs, coverage, ITs, sanitizers, stress, TSan in every run (`GCC_BUILD_ENABLE_TSAN=1` in the project file), packaging, the smoke test against the built debs).
+- `utils/check_docs.sh` (a repository gate, the pipeline's `docs` check): Doxygen over `app/spscring.h` with every warning an error (skipped where doxygen is absent), this README's API contract compiled and run against `app/spscring.c` (every declared function but `spsc_ring_init` must have its line), and its wrap times within 1 % of `2^N / r`.
 
 ## Dependencies
 
@@ -120,7 +121,7 @@ Memory and undefined-behavior checks run both suites with AddressSanitizer, Unde
 ./utils/build_sanitizer_tests.sh
 ```
 
-The **Quality** workflow's `sanitizers` and `thread-sanitizer` jobs run on every push and pull request, gated on `integration-stress` passing first:
+The **Quality** workflow's `sanitizers` and `thread-sanitizer` jobs run on every push and pull request, after `build`, beside the stress job:
 
 ```bash
 ./utils/build_stress.sh && ./utils/run_stress.sh
@@ -137,7 +138,7 @@ MIT, see `LICENSE`.
 
 ## Release process
 
-Releases are tag-driven:
+Releases are tag-driven. Today the release line is `together` (master waits for the owner): a release is built twice to one hash in kyr-build's noble build root, tagged `v<VERSION>`, and pinned by sha256 in its consumers' `deps.txt`; no GitHub release is published for the current version (1.0.8). The flow below is the CI path that publishes one:
 
 1. Run the complete local validation pipeline from a clean release candidate:
 
@@ -158,10 +159,11 @@ Releases are tag-driven:
 
 The [`Release` workflow](./.github/workflows/release.yml) requires the full
 [`Quality` gate](./.github/workflows/quality.yml) to pass, then rejects a tag
-that does not equal `v${VERSION}`. It builds the release library, strips the
-staged shared object, verifies that exact object with `utils/check_hardening.sh`,
-attaches a build-provenance attestation, and publishes the packages and `SHA256SUMS`
-to the GitHub Release:
+that does not equal `v${VERSION}`. It builds the packages twice on two runners
+(the staged shared object stripped and that exact object verified with
+`check_hardening.sh` by `utils/build_deb.sh`), compares every hash, and
+publishes the packages, the tarball and `SHA256SUMS` to the GitHub Release
+only when they agree (no build-provenance attestation: `attest` stays off):
 
 - `libspscring_<version>_<arch>.deb` — runtime: `/usr/local/lib/libspscring.so.<version>` + soname symlink, `ldconfig` hooks.
 - `libspscring-dev_<version>_<arch>.deb` — development: `/usr/local/include/spscring.h`, `/usr/local/lib/libspscring.a`, `libspscring.so` linker symlink. Depends on `libspscring (= <version>)`.
@@ -182,15 +184,19 @@ or with `gh workflow run release.yml`.
 
 ## Continuous integration
 
-Three workflows, a connected graph rather than independent races on every push:
+Four workflows, a connected graph rather than independent races on every push:
 
-- **Quality** (`.github/workflows/quality.yml`) — `build` → `unit-tests-coverage` (leaf) and
-  `integration-tests` → `sanitizers` → `package-smoke`. Also invocable as a reusable workflow.
+- **Quality** (`.github/workflows/quality.yml`, cicd's `c-quality.yml@v2`, kind lib) — `build` →
+  `compiler-portability`, `unit-tests-coverage`, `integration`, `stress`, `sanitizers` and
+  `thread-sanitizer`, beside `dependency-law`, `abi-gate` and `format-check`; `package-smoke` after
+  every one of them. Also invocable as a reusable workflow.
 - **Security** (`.github/workflows/security.yml`) — CodeQL + GCC's `-fanalyzer`, on push/PR
   plus a weekly schedule.
-- **Release** (`.github/workflows/release.yml`) — requires Quality to pass, validates the
-  pushed tag matches `VERSION`, builds the hardened package, attaches a build-provenance
-  attestation, and uploads to the GitHub Release.
+- **Release** (`.github/workflows/release.yml`, cicd's `c-release.yml@v2`) — requires Quality to
+  pass, validates the pushed tag matches `VERSION`, builds the hardened package twice on two
+  runners, compares every hash, and uploads to the GitHub Release.
+- **Coverage badge** (`.github/workflows/coverage-badge.yml`) — after a successful Quality run on
+  master, commits the badge refreshed from its coverage summary.
 
 ## Build profiles & hardening
 
@@ -198,12 +204,12 @@ Builds go through `utils/build_libs.sh [profile ...]`, driven by the profile cat
 
 | Profile | Optimization | Warnings | Instrumentation | Hardened | Use it for |
 |---|---|---|---|---|---|
-| debug | `-Og -g3` | core | — | no | day-to-day development |
-| audit | `-O1 -g3` | everything + `-fanalyzer` | — | yes | compiler-driven validation |
-| sanitize | `-O1 -g3` | strict | ASan+UBSan+LSan | yes minus FORTIFY — conflicts with ASan | runtime bug hunting |
-| release | `-O2 -DNDEBUG` | strict | — | yes — full set below | production / the deb payload |
-| native | `-O3 -flto -march=native` | strict | — | yes | benchmarks on the deploy box |
-| extreme | `-O3 -flto -march=native` | core | — | deliberately none | max-perf experiments only |
+| debug | `-Og -g3` | the whole set, `-Werror` | — | no | day-to-day development |
+| audit | `-O1 -g3` | the whole set, `-Werror`, + `-fanalyzer` | — | yes | compiler-driven validation |
+| sanitize | `-O1 -g3` | the whole set, `-Werror` | ASan+UBSan+LSan | yes minus FORTIFY — conflicts with ASan | runtime bug hunting |
+| release | `-O2 -DNDEBUG` | the whole set, `-Werror` | — | yes — full set below | production / the deb payload |
+| native | `-O3 -flto=auto -march=native` | the whole set, `-Werror` | — | yes | benchmarks on the deploy box |
+| extreme | `-O3 -flto=auto -march=native` | the whole set, `-Werror` | — | deliberately none | max-perf experiments only |
 
 Release hardening, by stage:
 
