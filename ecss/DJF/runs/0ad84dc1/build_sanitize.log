@@ -1,0 +1,3 @@
+CC app/spscring.c
+AR $ROOT/build/sanitize/libspscring.a
+LD $ROOT/build/sanitize/libspscring.so.1.0.8

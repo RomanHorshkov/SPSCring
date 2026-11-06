@@ -1,0 +1,12 @@
+case,profile,status,summary,evidence
+SPSCRING-VC-001,release,passed,13 tests passed,runs/0ad84dc1/unit-tests-release.log
+SPSCRING-VC-002,coverage,passed,"20 tests passed (17 unit, 3 integration) · lines 100.0 % · branches 100.0 %",runs/0ad84dc1/coverage-summary.json
+SPSCRING-VC-003,release,passed,3 tests passed,runs/0ad84dc1/integration.log
+SPSCRING-VC-004,sanitize,passed,"20 tests passed (17 unit, 3 integration) and the stress of 500000 values, no sanitizer report",runs/0ad84dc1/sanitizers.log
+SPSCRING-VC-005,tsan,passed,"3 tests passed and the stress of 200000 values, no race reported",runs/0ad84dc1/tsan.log
+SPSCRING-VC-006,release,passed,"8000000 values exactly once and in order, 14100157 values/s",runs/0ad84dc1/stress-run.log
+SPSCRING-VC-007,release,passed,"abi and abi-exports passed: the 9 declared functions, all @@SPSCRING_1",runs/0ad84dc1/abi-exports.log
+SPSCRING-VC-008,release,passed,smoke test passed against the installed packages,runs/0ad84dc1/package-smoke.log
+SPSCRING-VC-009,release,passed,"check_hardening passed on the release artifacts, 20 ELF(s) within the glibc ceiling",runs/0ad84dc1/glibc-ceiling.log
+SPSCRING-VC-010,audit,passed,"the audit build (-fanalyzer, -Werror) and the gates legacy-names, pragmas, tables and warnings passed: no warning in 24 logs",runs/0ad84dc1/warnings.log
+SPSCRING-VC-011,inspection,passed,"inspection held: 10 of 10 checks",runs/0ad84dc1/inspection.md

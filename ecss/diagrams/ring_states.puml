@@ -1,0 +1,27 @@
+@startuml
+' SPSCRING-DOC-SDD, figure 5-1: the ring's states as its two counters define them (DEC-001: full counters, every slot usable)
+title SPSCring: the ring's states (n = tail - head, N = capacity)
+hide empty description
+[*] --> Empty : spsc_ring_init(N)\nhead = tail = 0
+state "Empty\nn == 0" as Empty
+state "Partial\n0 < n < N" as Partial
+state "Full\nn == N" as Full
+Empty --> Partial : push / 0\n(N > 1)
+Empty --> Full : push / 0\n(N == 1)
+Partial --> Partial : push / 0, pop / 0
+Partial --> Full : push / 0\n(n becomes N)
+Partial --> Empty : pop / 0\n(n becomes 0)
+Full --> Partial : pop / 0\n(N > 1)
+Full --> Empty : pop / 0\n(N == 1)
+Empty --> Empty : pop / -1\n(nothing taken)
+Full --> Full : push / -1\n(nothing stored)
+Partial --> Empty : reset\n(both sides stopped)
+Full --> Empty : reset\n(both sides stopped)
+Empty --> [*] : spsc_ring_destroy
+Partial --> [*] : spsc_ring_destroy
+Full --> [*] : spsc_ring_destroy
+note right of Full
+  head and tail only grow (64-bit);
+  the slot of index i is buf[i & (N - 1)]
+end note
+@enduml

@@ -1,0 +1,3 @@
+CC app/spscring.c
+AR $ROOT/build/tsan/libspscring.a
+LD $ROOT/build/tsan/libspscring.so.1.0.8

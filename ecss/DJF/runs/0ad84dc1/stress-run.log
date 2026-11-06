@@ -1,0 +1,12 @@
+
+[release/static/stress_mt]
+SPSCring stress: 1 producer x 8000000 items, ring capacity 4096
+  consumed_count=8000000 (expected 8000000)
+  produced_sum=32000004000000 consumed_sum=32000004000000 (match: yes)
+  elapsed=0.567s  throughput=14100157 ops/s
+
+STRESS TEST PASSED (exactly-once, in-order, proven via per-item bitmap)
+
+[stress summary] $ROOT/tests/results/stress/stress_summary.tsv
+# status  profile  linkage  benchmark  mean_cost  mean_rate  result
+PASS      release  static   stress_mt  NA         NA         tests/results/stress/release/static/stress_mt_result.txt

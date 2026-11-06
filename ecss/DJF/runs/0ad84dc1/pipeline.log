@@ -1,0 +1,100 @@
+== 2026-11-04 21:51:16 SPSCring 0ad84dc1daf31dde302bee2fa1d1e5386049e5ec (v1.0.8)
+  apt     build-essential            12.12ubuntu2.26.04.2 ok
+  apt     pkg-config                 2.5.1-4 ok
+  apt     libcmocka-dev              2.0.2-1 ok
+  apt     gcovr                      7.2+really-2 ok
+  own     kyr-build                  want 3.1.1 from RomanHorshkov/kyr_build -> sysroot
+  sysroot: kyr-build 3.1.1
+deps: sysroot ready at $ROOT/build/sysroot
+export SPSCRING_DEPS_INCLUDE_DIR=$ROOT/build/sysroot/include
+export SPSCRING_DEPS_LIB_DIR=$ROOT/build/sysroot/lib
+export KYR_BUILD_DIR=$ROOT/build/sysroot/share/kyr-build
+export LD_LIBRARY_PATH=$ROOT/build/sysroot/lib
+export PKG_CONFIG_PATH=$ROOT/build/sysroot/lib/pkgconfig
+== host build: development only (Build-Root: none)
+== deps-tiers
+   ok  (build/pipeline/deps-tiers.log)
+== template
+   ok  (build/pipeline/template.log)
+== legacy-names
+   ok  (build/pipeline/legacy-names.log)
+== pragmas
+   ok  (build/pipeline/pragmas.log)
+== tables
+   ok  (build/pipeline/tables.log)
+== format
+   SKIP: clang-format 18 not installed (the major CI pins)
+== abi
+   ok  (build/pipeline/abi.log)
+== build:debug
+   ok  (build/pipeline/build_debug.log)
+== build:audit
+   ok  (build/pipeline/build_audit.log)
+== build:sanitize
+   ok  (build/pipeline/build_sanitize.log)
+== build:release
+   ok  (build/pipeline/build_release.log)
+== build:native
+   ok  (build/pipeline/build_native.log)
+== build:extreme
+   ok  (build/pipeline/build_extreme.log)
+== build:tsan
+   ok  (build/pipeline/build_tsan.log)
+== abi-exports
+   ok  (build/pipeline/abi-exports.log)
+== unit-tests-release
+   ok  (build/pipeline/unit-tests-release.log)
+== unit-tests
+   ok  (build/pipeline/unit-tests.log)
+== integration
+   ok  (build/pipeline/integration.log)
+== sanitizers
+   ok  (build/pipeline/sanitizers.log)
+== tsan
+   ok  (build/pipeline/tsan.log)
+== stress-build
+   ok  (build/pipeline/stress-build.log)
+== stress-run
+   ok  (build/pipeline/stress-run.log)
+== package
+   ok  (build/pipeline/package.log)
+== package-smoke
+   ok  (build/pipeline/package-smoke.log)
+== glibc-ceiling
+   ok  (build/pipeline/glibc-ceiling.log)
+== warnings
+   ok  (build/pipeline/warnings.log)
+
+== summary
+   ok   deps-tiers
+   ok   template
+   ok   legacy-names
+   ok   pragmas
+   ok   tables
+   SKIP format (clang-format 18 not installed (the major CI pins))
+   ok   abi
+   ok   build:debug
+   ok   build:audit
+   ok   build:sanitize
+   ok   build:release
+   ok   build:native
+   ok   build:extreme
+   ok   build:tsan
+   ok   abi-exports
+   ok   unit-tests-release
+   ok   unit-tests
+   ok   integration
+   ok   sanitizers
+   ok   tsan
+   ok   stress-build
+   ok   stress-run
+   ok   package
+   ok   package-smoke
+   ok   glibc-ceiling
+   ok   warnings
+
+== debs (build/debs/SHA256SUMS)
+   42b7f468c212f53af55ca4efb1669088f50750be0e6f8114f53114f65a4bc692  libspscring-dev_1.0.8_amd64.deb
+   dc1faf7300b641d3f18852108f755facd34f924e917ec589499afa7619c4e053  libspscring_1.0.8_amd64.deb
+pipeline GREEN
+== 2026-11-04 21:51:26 exit 0

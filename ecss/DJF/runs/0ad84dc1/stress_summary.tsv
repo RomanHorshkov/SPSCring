@@ -1,0 +1,2 @@
+# status	profile	linkage	benchmark	mean_cost	mean_rate	result
+PASS	release	static	stress_mt	NA	NA	tests/results/stress/release/static/stress_mt_result.txt

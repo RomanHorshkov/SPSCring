@@ -1,0 +1,54 @@
+CC app/spscring.c
+AR $ROOT/build/release/libspscring.a
+LD $ROOT/build/release/libspscring.so.1.0.8
+CHECK $ROOT/build/release/libspscring.so.1.0.8 $ROOT/build/release/libspscring.a
+$ROOT/build/release/libspscring.so.1.0.8  [lib]
+  ✓ non-executable stack
+  ✓ GNU_RELRO segment present
+  ✓ immediate binding (full RELRO)
+  ✓ no TEXTREL
+  ✓ no RPATH/RUNPATH
+  ✓ symbol versions within GLIBC_2.39 GLIBCXX_3.4.33 CXXABI_1.3.15 GCC_14.0.0
+  ✓ every DT_NEEDED on the allowlist
+  ✓ versioned SONAME libspscring.so.1
+  ✓ no build-host path strings
+  ! not stripped (.symtab present) — expected before build_deb's strip, unexpected in a staged deb payload (WARN)
+  ! no __stack_chk_fail reference — no protected frames (fine for tiny libs) or missing -fstack-protector-strong (WARN)
+  ! no __*_chk symbols — all checked calls proven safe, no fortifiable calls, or missing -D_FORTIFY_SOURCE (WARN)
+
+$ROOT/build/release/libspscring.a  [archive]
+  ✓ all 1 member object(s) position-independent
+
+check_hardening: all hard checks passed (2 file(s))
+CC tests/UTs/unit_tests.c
+LD $ROOT/build/UTs_release/ut/ut
+RUN build/UTs_release/ut/ut
+[==========] tests: Running 13 test(s).
+[ RUN      ] test_init_accepts_power_of_two
+[       OK ] test_init_accepts_power_of_two
+[ RUN      ] test_init_rejects_invalid_capacity
+[       OK ] test_init_rejects_invalid_capacity
+[ RUN      ] test_push_pop_fifo_order
+[       OK ] test_push_pop_fifo_order
+[ RUN      ] test_detects_full_ring
+[       OK ] test_detects_full_ring
+[ RUN      ] test_pop_from_empty_ring
+[       OK ] test_pop_from_empty_ring
+[ RUN      ] test_push_returns_error_when_ring_full
+[       OK ] test_push_returns_error_when_ring_full
+[ RUN      ] test_pop_succeeds_when_not_empty
+[       OK ] test_pop_succeeds_when_not_empty
+[ RUN      ] test_capacity_and_size
+[       OK ] test_capacity_and_size
+[ RUN      ] test_size_stays_bounded_across_wraparound
+[       OK ] test_size_stays_bounded_across_wraparound
+[ RUN      ] test_reset_clears_ring
+[       OK ] test_reset_clears_ring
+[ RUN      ] test_destroy_handles_null_pointer
+[       OK ] test_destroy_handles_null_pointer
+[ RUN      ] test_destroy_handles_null_ring_instance
+[       OK ] test_destroy_handles_null_ring_instance
+[ RUN      ] test_functions_with_null_ring
+[       OK ] test_functions_with_null_ring
+[==========] tests: 13 test(s) run.
+[  PASSED  ] 13 test(s).

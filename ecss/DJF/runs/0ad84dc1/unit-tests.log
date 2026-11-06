@@ -1,0 +1,73 @@
+CC app/spscring.c
+CC tests/UTs/unit_tests.c
+LD $ROOT/build/UTs/ut/ut
+CC tests/ITs/integration_tests.c
+LD $ROOT/build/UTs/it/it
+RUN build/UTs/ut/ut
+[==========] tests: Running 17 test(s).
+[ RUN      ] test_init_accepts_power_of_two
+[       OK ] test_init_accepts_power_of_two
+[ RUN      ] test_init_rejects_invalid_capacity
+[       OK ] test_init_rejects_invalid_capacity
+[ RUN      ] test_init_handles_control_allocation_failure
+[       OK ] test_init_handles_control_allocation_failure
+[ RUN      ] test_init_cleans_up_after_buffer_allocation_failure
+[       OK ] test_init_cleans_up_after_buffer_allocation_failure
+[ RUN      ] test_init_rejects_non_lock_free_head
+[       OK ] test_init_rejects_non_lock_free_head
+[ RUN      ] test_init_rejects_non_lock_free_tail
+[       OK ] test_init_rejects_non_lock_free_tail
+[ RUN      ] test_push_pop_fifo_order
+[       OK ] test_push_pop_fifo_order
+[ RUN      ] test_detects_full_ring
+[       OK ] test_detects_full_ring
+[ RUN      ] test_pop_from_empty_ring
+[       OK ] test_pop_from_empty_ring
+[ RUN      ] test_push_returns_error_when_ring_full
+[       OK ] test_push_returns_error_when_ring_full
+[ RUN      ] test_pop_succeeds_when_not_empty
+[       OK ] test_pop_succeeds_when_not_empty
+[ RUN      ] test_capacity_and_size
+[       OK ] test_capacity_and_size
+[ RUN      ] test_size_stays_bounded_across_wraparound
+[       OK ] test_size_stays_bounded_across_wraparound
+[ RUN      ] test_reset_clears_ring
+[       OK ] test_reset_clears_ring
+[ RUN      ] test_destroy_handles_null_pointer
+[       OK ] test_destroy_handles_null_pointer
+[ RUN      ] test_destroy_handles_null_ring_instance
+[       OK ] test_destroy_handles_null_ring_instance
+[ RUN      ] test_functions_with_null_ring
+[       OK ] test_functions_with_null_ring
+[==========] tests: 17 test(s) run.
+[  PASSED  ] 17 test(s).
+RUN build/UTs/it/it
+[==========] tests: Running 3 test(s).
+[ RUN      ] test_simple_flow
+[       OK ] test_simple_flow
+[ RUN      ] test_threaded_flow
+[       OK ] test_threaded_flow
+[ RUN      ] test_size_never_underflows_concurrently
+[       OK ] test_size_never_underflows_concurrently
+[==========] tests: 3 test(s) run.
+[  PASSED  ] 3 test(s).
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...
+------------------------------------------------------------------------------
+                           GCC Code Coverage Report
+Directory: .
+------------------------------------------------------------------------------
+File                                       Lines    Exec  Cover   Missing
+------------------------------------------------------------------------------
+app/spscring.c                                89      89   100%
+------------------------------------------------------------------------------
+TOTAL                                         89      89   100%
+------------------------------------------------------------------------------
+coverage report: $ROOT/tests/results/UTs/UTs_coverage.html
+coverage gate: line 100%, branch 100%
+(INFO) Reading coverage data...
+(INFO) Writing coverage report...

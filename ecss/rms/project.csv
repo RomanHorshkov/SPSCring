@@ -1,0 +1,14 @@
+field,value
+key,SPSCRING
+name,"SPSCring: the wait-free hand-off of a connection from the listener to its operator"
+description,"The single-producer single-consumer ring of int values kyr_host uses to hand each accepted socket from its listener to the operator that serves it. ECSS-E-ST-40C Rev.1 and ECSS-Q-ST-80C Rev.2, category C proposed; the requirements baseline is KYR's (the platform), the release qualified is 1.0.8."
+repo,SPSCring
+release,v1.0.8
+version,1.0.8
+commit,0ad84dc1daf31dde302bee2fa1d1e5386049e5ec
+headers,app/spscring.h
+doxygen_input,app/spscring.h app/spscring.c
+system,KYR
+api_prefix,spsc_ring_
+api_tests,tests/UTs/unit_tests.c tests/ITs/integration_tests.c tests/stress/stress_mt.c
+api_example,tests/package/smoke.c

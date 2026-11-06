@@ -1,0 +1,9 @@
+repo,tag,commit,file,path,why
+kyr_host,v1.5.0,f69df7a72db3a7cfae89e0046117b426f230cb02,app/src/core/worker/worker.c,customers/kyr_host/app/src/core/worker/worker.c,"the listener's thread pushes each accepted descriptor into the least loaded operator's ring"
+kyr_host,v1.5.0,f69df7a72db3a7cfae89e0046117b426f230cb02,app/src/core/worker/operator/operator.c,customers/kyr_host/app/src/core/worker/operator/operator.c,"each operator creates its ring, drains it on its wake-up and destroys it"
+kyr_host,v1.5.0,f69df7a72db3a7cfae89e0046117b426f230cb02,app/internal/kyr_host/core/worker/operator/operator.h,customers/kyr_host/app/internal/kyr_host/core/worker/operator/operator.h,"the operator holds one ring and counts the descriptors queued in it"
+kyr_host,v1.5.0,f69df7a72db3a7cfae89e0046117b426f230cb02,app/internal/kyr_host/core/host_env.def,customers/kyr_host/app/internal/kyr_host/core/host_env.def,"KYR_HOST_RING_CAPACITY: a power of two from 8 to 1024"
+kyr_host,v1.5.0,f69df7a72db3a7cfae89e0046117b426f230cb02,deps.txt,customers/kyr_host/deps.txt,"libspscring and libspscring-dev 1.0.7 pinned by SHA-256"
+kyr_server,v3.14.0,168f33b3f18f9f700191f6c263f34b644a8e8d02,deps.txt,customers/kyr_server/deps.txt,"the box's servers link libspscring 1.0.7 through kyr_host"
+kyr,v0.40.0,394e7280e70a0906e503a64df402883ba64a6541,deps.txt,customers/kyr/deps.txt,"the platform's release train ships libspscring 1.0.7"
+kyr_host,v1.5.0,f69df7a72db3a7cfae89e0046117b426f230cb02,app/src/core/listener/listener.c,customers/kyr_host/app/src/core/listener/listener.c,"a refused hand-off is answered by a reject slot (the canned 503), never by a close"

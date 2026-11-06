@@ -1,0 +1,25 @@
+  ok      utils/spscring_project.sh (project file, declarations only)
+  ok      utils/build_ITs.sh
+  ok      utils/build_UTs.sh
+  ok      utils/build_UTs_release.sh
+  ok      utils/build_deb.sh
+  ok      utils/build_libs.sh
+  ok      utils/build_sanitizer_tests.sh
+  ok      utils/build_stress.sh
+  ok      utils/build_tsan_tests.sh
+  ok      utils/check_abi.sh
+  ok      utils/check_hardening.sh
+  ok      utils/deps.sh
+  ok      utils/format.sh
+  ok      utils/gcc_build_profiles.sh
+  ok      utils/run_pipeline.sh
+  ok      utils/run_stress.sh
+  ok      utils/smoke_test_package.sh
+  ok      utils/spscring.map (linker version script)
+  ok      .clang-format
+  ok      VERSION
+  ok      deps.txt
+  ok      LICENSE
+  ok      README.md
+  ok      .github/workflows/quality.yml
+template: no drift

@@ -1,0 +1,23 @@
+@startuml
+' SPSCRING-DOC-SDD, figure 5-2: one hand-off and the happens-before that makes it safe (ISO/IEC 9899:2011 7.17)
+title SPSCring: push and pop, with their memory orders
+participant "producer\n(kyr_host listener)" as P
+participant "tail\n(_Atomic uint64_t,\nown cache line)" as T
+participant "buf[i & mask]" as B
+participant "head\n(_Atomic uint64_t,\nown cache line)" as H
+participant "consumer\n(kyr_host operator)" as C
+== spsc_ring_push(ring, fd) ==
+P -> T : t = load(tail, relaxed)\n(the producer owns it)
+P -> H : h = load(head, acquire)\nfull? (t - h == N)
+note right of H : pairs with the consumer's\nrelease of head: the slot\nwas read before it is reused
+P -> B : buf[t & mask] = fd\n(plain store)
+P -> T : store(tail, t + 1, release)
+note left of T : publishes the slot:\nthe write above happens-before\nany acquire that sees t + 1
+== spsc_ring_pop(ring, &fd) ==
+C -> H : h = load(head, relaxed)\n(the consumer owns it)
+C -> T : t = load(tail, acquire)\nempty? (h == t)
+note right of T : synchronizes-with the\nproducer's release: buf[h & mask]\nholds the value pushed
+C -> B : fd = buf[h & mask]\n(plain load)
+C -> H : store(head, h + 1, release)
+note right of H : hands the slot back
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+' SPSCRING-DOC-SDD, figure 4-1: the components of app/spscring.c and the customer around them (kyr_host 1.5.0)
+title SPSCring 1.0.8: components
+skinparam componentStyle rectangle
+skinparam shadowing false
+package "kyr_host (the customer)" {
+  [listener / dispatcher\nworker_dispatch_to_operator()] as L
+  [operator thread\n_operator_handle_wakeup_event()] as O
+}
+package "libspscring (app/spscring.c)" {
+  [CMP-LIFE\ninit, destroy, reset] as LIFE
+  [CMP-PRODUCER\npush, is_full] as PROD
+  [CMP-CONSUMER\npop, is_empty] as CONS
+  [CMP-QUERY\ncapacity, size] as Q
+  [CMP-STATE\nstruct spsc_ring:\nbuf, size, mask\nhead (own line) | tail (own line)] as ST
+  [CMP-SEAMS\ntests only:\nSPSC_RING_TESTING] as SEAMS #lightgrey
+}
+interface "spscring.h" as H
+L --> H : spsc_ring_push(ring, fd)
+O --> H : spsc_ring_pop(ring, &fd)
+O --> H : spsc_ring_init / destroy
+H --> PROD
+H --> CONS
+H --> LIFE
+H --> Q
+PROD --> ST : writes tail, slots\nreads head (acquire)
+CONS --> ST : writes head\nreads tail (acquire), slots
+LIFE --> ST : allocates, probes lock-free
+Q --> ST : reads head then tail
+SEAMS ..> LIFE : replaces the allocators\n(coverage and sanitizer builds)
+@enduml
