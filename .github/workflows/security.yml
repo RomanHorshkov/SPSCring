@@ -42,7 +42,16 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential
+          # shellcheck disable=SC2046
+          sudo apt-get install -y build-essential $(awk '$1=="apt"{print $2}' deps.txt)
+
+      - name: Bootstrap the pinned kyr-build and resolve deps.txt into the sysroot
+        env:
+          GH_TOKEN: ${{ secrets.SIBLING_REPOS_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          # utils/build_libs.sh is a wrapper over the pinned kyr-build (private release, read with the token)
+          ./utils/deps.sh sysroot
+          ./utils/deps.sh env --plain >> "$GITHUB_ENV"
 
       - name: Build (CodeQL autobuild)
         run: ./utils/build_libs.sh release

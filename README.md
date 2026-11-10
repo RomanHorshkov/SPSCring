@@ -186,13 +186,13 @@ or with `gh workflow run release.yml`.
 
 Four workflows, a connected graph rather than independent races on every push:
 
-- **Quality** (`.github/workflows/quality.yml`, cicd's `c-quality.yml@v2`, kind lib) — `build` →
+- **Quality** (`.github/workflows/quality.yml`, cicd's `c-quality.yml@v2.3.0`, kind lib) — `build` →
   `compiler-portability`, `unit-tests-coverage`, `integration`, `stress`, `sanitizers` and
   `thread-sanitizer`, beside `dependency-law`, `abi-gate` and `format-check`; `package-smoke` after
   every one of them. Also invocable as a reusable workflow.
 - **Security** (`.github/workflows/security.yml`) — CodeQL + GCC's `-fanalyzer`, on push/PR
   plus a weekly schedule.
-- **Release** (`.github/workflows/release.yml`, cicd's `c-release.yml@v2`) — requires Quality to
+- **Release** (`.github/workflows/release.yml`, cicd's `c-release.yml@v2.3.0`) — requires Quality to
   pass, validates the pushed tag matches `VERSION`, builds the hardened package twice on two
   runners, compares every hash, and uploads to the GitHub Release.
 - **Coverage badge** (`.github/workflows/coverage-badge.yml`) — after a successful Quality run on
