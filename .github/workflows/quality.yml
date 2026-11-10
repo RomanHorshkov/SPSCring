@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   quality:
-    uses: RomanHorshkov/cicd/.github/workflows/c-quality.yml@v2.3.1
+    uses: RomanHorshkov/cicd/.github/workflows/c-quality.yml@v2.3.2
     with:
       kind: lib
       lib-name: spscring
