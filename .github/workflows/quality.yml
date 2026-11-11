@@ -5,11 +5,10 @@ name: Quality
 # calling workflow's name so neither cancels the other.
 
 on:
+  # One run per commit: master only (the owner, 2026-11-11; `together` carries the same commits). A release tag's run is
+  # release.yml's quality gate, which calls this workflow.
   push:
-    branches:
-      - "**"
-    tags:
-      - "**"
+    branches: [master]
   pull_request:
   workflow_dispatch:
   workflow_call:

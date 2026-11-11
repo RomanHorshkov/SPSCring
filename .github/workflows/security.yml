@@ -1,16 +1,15 @@
 name: Security
 
-# CodeQL + GCC's static analyzer (-fanalyzer), on push/PR (CodeQL is diff-aware and most useful
-# there) plus a weekly scheduled run so drift in dependencies/toolchains still gets caught even
+# CodeQL + GCC's static analyzer (-fanalyzer), on every release tag plus a weekly scheduled run
+# (not on each push: the owner, 2026-11-11) so drift in dependencies/toolchains still gets caught even
 # without a code change. Minimal permissions throughout — only the CodeQL upload step needs
 # security-events: write.
 
 on:
+  # Weekly and on every release tag, never on a push (the owner, 2026-11-11: GitHub minutes).
   push:
-    branches: [master, safety_upgrades]
     tags:
-      - "**"
-  pull_request:
+      - "v*.*.*"
   schedule:
     - cron: "0 6 * * 1" # every Monday 06:00 UTC
   workflow_dispatch:
