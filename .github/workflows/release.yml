@@ -1,7 +1,12 @@
 name: Release
 
-# Quality gate first, then the shared release from cicd: tag check, kyr-build bootstrap, double build on two runners,
-# hash compare, GitHub Release. A workflow_dispatch run skips the tag check and publishes nothing.
+# Quality gate first, then the shared release from cicd (c-release.yml, kind lib). A tag publishes nothing: the release
+# is built in kyr-build's pinned build root and published by the train before it pushes the tag. On a tag the one job,
+# verify, waits for that release (up to about 30 minutes), then proves VERSION is the tag and every asset of the release
+# is in its SHA256SUMS at its hash; a release still missing fails the run ("a train must publish before it tags").
+# A workflow_dispatch run builds twice on two runners and compares every hash, publishing nothing (the bundle is only
+# uploaded as an artifact); kyr-build's build_deb refuses a release outside its build root, so on a runner that build
+# fails until it enters the root.
 
 on:
   push:
